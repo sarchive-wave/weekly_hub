@@ -124,6 +124,10 @@ const WeekDetailPage: React.FC = () => {
               weekId={wId}
               userId={selectedUserId}
               displayName={selectedMember?.display_name ?? ''}
+              weekStartDate={week?.start_date ?? null}
+              weekYear={week?.year}
+              weekMonth={week?.month}
+              weekNum={week?.week_num}
               onStatusChange={(status) => handleStatusChange(selectedUserId, status)}
             />
           )}
