@@ -51,7 +51,7 @@ const MainPage: React.FC = () => {
   };
 
   const handleCreated = (week: Week) => {
-    setWeeks((prev) => [week, ...prev]);
+    weekApi.list().then(setWeeks);
     setSelectedYear(week.year);
     setSelectedMonth(week.month);
   };

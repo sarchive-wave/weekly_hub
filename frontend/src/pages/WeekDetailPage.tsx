@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box, List, ListItem, ListItemButton, ListItemText,
-  Typography, Divider, CircularProgress, Button,
+  Typography, Divider, CircularProgress, Button, IconButton,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { weekApi } from '../api/weekApi';
 import type { Week, MemberStatus } from '../types';
@@ -15,7 +15,7 @@ const SIDEBAR_WIDTH = 240;
 
 const statusColor: Record<string, string> = {
   none: '#94A3B8',
-  draft: '#F59E0B',
+  draft: '#94A3B8',
   done: '#3B82F6',
 };
 
@@ -28,17 +28,30 @@ const WeekDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const wId = Number(weekId);
+  const [allWeeks, setAllWeeks] = useState<Week[]>([]);
 
   useEffect(() => {
     const load = async () => {
-      const [allWeeks, m] = await Promise.all([weekApi.list(), weekApi.getMembers(wId)]);
-      const found = allWeeks.find((w) => w.id === wId);
+      const [weeks, m] = await Promise.all([weekApi.list(), weekApi.getMembers(wId)]);
+      const found = weeks.find((w) => w.id === wId);
+      setAllWeeks(weeks);
       setWeek(found ?? null);
       setMembers(m);
       setLoading(false);
     };
     load();
   }, [wId]);
+
+  const sameMonthWeeks = useMemo(() => {
+    if (!week) return [];
+    return allWeeks
+      .filter((w) => w.year === week.year && w.month === week.month)
+      .sort((a, b) => a.week_num - b.week_num);
+  }, [allWeeks, week]);
+
+  const currentIdx = sameMonthWeeks.findIndex((w) => w.id === wId);
+  const prevWeek = currentIdx > 0 ? sameMonthWeeks[currentIdx - 1] : null;
+  const nextWeek = currentIdx < sameMonthWeeks.length - 1 ? sameMonthWeeks[currentIdx + 1] : null;
 
   const handleStatusChange = (userId: number, newStatus: string) => {
     setMembers((prev) =>
@@ -81,12 +94,48 @@ const WeekDetailPage: React.FC = () => {
             </Button>
           </Box>
           <Divider />
-          <Box sx={{ px: 2, py: 1.5 }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {/* 주차 네비게이션 */}
+          <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <IconButton
+              size="small"
+              onClick={() => prevWeek && navigate(`/weeks/${prevWeek.id}`)}
+              disabled={!prevWeek}
+              sx={{ color: 'text.secondary' }}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </IconButton>
+            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>
               {week?.title}
             </Typography>
+            <IconButton
+              size="small"
+              onClick={() => nextWeek && navigate(`/weeks/${nextWeek.id}`)}
+              disabled={!nextWeek}
+              sx={{ color: 'text.secondary' }}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </IconButton>
           </Box>
           <List dense sx={{ px: 1 }}>
+            {/* 전체 메뉴 */}
+            <ListItem disablePadding>
+              <ListItemButton
+                selected={selectedUserId === null}
+                onClick={() => setSelectedUserId(null)}
+                sx={{
+                  borderRadius: 1.5,
+                  mb: 0.5,
+                  '&.Mui-selected': { bgcolor: '#EFF6FF' },
+                }}
+              >
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#3B82F6', mr: 1.5, flexShrink: 0 }} />
+                <ListItemText
+                  primary="전체"
+                  primaryTypographyProps={{ fontSize: 14, fontWeight: selectedUserId === null ? 700 : 400, color: selectedUserId === null ? 'primary.main' : 'text.primary' }}
+                />
+              </ListItemButton>
+            </ListItem>
+            <Divider sx={{ my: 0.5 }} />
             {members.map((member) => (
               <ListItem key={member.user_id} disablePadding>
                 <ListItemButton

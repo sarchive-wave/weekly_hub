@@ -9,7 +9,7 @@ from app.schemas.week import WeekCreateRequest, WeekResponse, MemberStatusRespon
 
 
 def get_weeks(db: Session) -> List[WeekResponse]:
-    weeks = db.query(Week).order_by(Week.year.desc(), Week.month.desc(), Week.week_num.desc()).all()
+    weeks = db.query(Week).order_by(Week.year.desc(), Week.month.desc(), Week.week_num.asc()).all()
     active_count = db.query(User).filter(User.is_active == True).count()
     result = []
     for w in weeks:
@@ -60,11 +60,25 @@ def get_members(db: Session, week_id: int) -> List[MemberStatusResponse]:
 
 
 def get_summary(db: Session, week_id: int) -> OverallSummaryResponse:
+    import re
+    PINNED_LAST = "휴가 및 교육"
+
     week = _find(db, week_id)
-    projects = db.query(Project).order_by(Project.sort_order.asc(), Project.id.asc()).all()
+    projects = db.query(Project).all()
+    projects.sort(key=lambda p: (
+        p.name == PINNED_LAST,
+        not bool(re.match(r'^[A-Za-z]', p.name)),
+        p.name.lower() if re.match(r'^[A-Za-z]', p.name) else p.name
+    ))
     project_map = {p.id: p for p in projects}
 
-    reports = db.query(Report).filter(Report.week_id == week_id).all()
+    reports = (
+        db.query(Report)
+        .join(User, Report.user_id == User.id)
+        .filter(Report.week_id == week_id)
+        .order_by(User.sort_order.asc(), User.id.asc())
+        .all()
+    )
     data: dict = {}
     for report in reports:
         entries = db.query(ReportEntry).filter(ReportEntry.report_id == report.id).all()
@@ -77,18 +91,28 @@ def get_summary(db: Session, week_id: int) -> OverallSummaryResponse:
                 data[entry.project_id]["next"].append(entry.next_work.strip())
 
     items = []
+    pinned_item = None
     for project in projects:
-        if project.id not in data:
+        is_pinned = project.name == PINNED_LAST
+        d = data.get(project.id, {"current": [], "next": []})
+        has_content = bool(d["current"] or d["next"])
+
+        if not is_pinned and not has_content:
             continue
-        d = data[project.id]
-        if not d["current"] and not d["next"]:
-            continue
-        items.append(ProjectSummaryItem(
+
+        item = ProjectSummaryItem(
             project_id=project.id,
             project_name=project.name,
             current_work=d["current"],
             next_work=d["next"],
-        ))
+        )
+        if is_pinned:
+            pinned_item = item
+        else:
+            items.append(item)
+
+    if pinned_item:
+        items.append(pinned_item)
 
     return OverallSummaryResponse(week_id=week_id, title=week.title, projects=items)
 

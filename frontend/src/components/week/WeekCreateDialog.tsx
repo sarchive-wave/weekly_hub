@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Box, FormControl, InputLabel, Select, MenuItem, Typography,
@@ -24,6 +24,19 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const title = `${month}월 ${weekNum}주차`;
+
+  // 연도/월/주차 변경 시 해당 주 목요일 자동 계산
+  useEffect(() => {
+    const firstDay = new Date(year, month - 1, 1);
+    const firstDow = firstDay.getDay(); // 0=일, 1=월 ... 6=토
+    const daysToMonday = firstDow === 0 ? -6 : 1 - firstDow;
+    const monday = new Date(year, month - 1, 1 + daysToMonday + (weekNum - 1) * 7);
+    const thursday = new Date(monday);
+    thursday.setDate(monday.getDate() + 3);
+    const iso = thursday.toISOString().split('T')[0];
+    setStartDate(iso);
+    setEndDate(iso);
+  }, [year, month, weekNum]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -74,15 +87,6 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
             </FormControl>
           </Box>
 
-          <TextField
-            label="제목"
-            value={title}
-            size="small"
-            fullWidth
-            InputProps={{ readOnly: true }}
-            sx={{ bgcolor: '#F8FAFC' }}
-          />
-
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
               날짜 범위 (선택사항)
@@ -93,8 +97,9 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
                 size="small"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                sx={{ flex: 1 }}
-                inputProps={{ style: { fontSize: 13 } }}
+                onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement)?.showPicker?.()}
+                sx={{ flex: 1, cursor: 'pointer' }}
+                inputProps={{ style: { fontSize: 13, cursor: 'pointer' } }}
               />
               <Typography variant="body2" color="text.secondary">~</Typography>
               <TextField
@@ -102,8 +107,9 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
                 size="small"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                sx={{ flex: 1 }}
-                inputProps={{ style: { fontSize: 13 } }}
+                onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement)?.showPicker?.()}
+                sx={{ flex: 1, cursor: 'pointer' }}
+                inputProps={{ style: { fontSize: 13, cursor: 'pointer' } }}
               />
             </Box>
           </Box>

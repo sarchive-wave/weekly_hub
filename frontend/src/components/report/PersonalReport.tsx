@@ -125,6 +125,12 @@ const PersonalReport: React.FC<Props> = ({
     const updated = await reportApi.updateStatus(weekId, userId, newStatus);
     setReport(updated);
     onStatusChange(newStatus);
+    if (newStatus === 'done') setSaved(true);
+  };
+
+  const handleToggleDone = async () => {
+    const next = report?.status === 'done' ? 'none' : 'done';
+    await handleStatusChange(next);
   };
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', pt: 8 }}><CircularProgress /></Box>;
@@ -156,26 +162,27 @@ const PersonalReport: React.FC<Props> = ({
             </IconButton>
           )}
           {canEdit ? (
-            <ButtonGroup size="small" variant="outlined">
-              <Button
-                onClick={() => handleStatusChange('draft')}
-                variant={report?.status === 'draft' ? 'contained' : 'outlined'}
-                color="warning" sx={{ fontWeight: 600 }}
-              >작성중</Button>
-              <Button
-                onClick={() => handleStatusChange('done')}
-                variant={report?.status === 'done' ? 'contained' : 'outlined'}
-                color="primary" sx={{ fontWeight: 600 }}
-              >작성완료</Button>
-            </ButtonGroup>
+            <Button
+              size="small"
+              variant={report?.status === 'done' ? 'contained' : 'outlined'}
+              color={report?.status === 'done' ? 'primary' : 'inherit'}
+              onClick={handleToggleDone}
+              sx={{
+                fontWeight: 600,
+                color: report?.status === 'done' ? 'white' : 'text.disabled',
+                borderColor: report?.status === 'done' ? undefined : '#CBD5E1',
+              }}
+            >
+              작성완료
+            </Button>
           ) : (
             <Box sx={{
               px: 2, py: 0.5, borderRadius: 4,
-              bgcolor: report?.status === 'done' ? 'primary.main' : report?.status === 'draft' ? 'warning.main' : 'grey.300',
-              color: report?.status === 'none' ? 'text.secondary' : 'white',
+              bgcolor: report?.status === 'done' ? 'primary.main' : 'grey.300',
+              color: report?.status === 'done' ? 'white' : 'text.secondary',
               fontSize: 13, fontWeight: 600,
             }}>
-              {report?.status === 'done' ? '작성완료' : report?.status === 'draft' ? '작성중' : '미작성'}
+              {report?.status === 'done' ? '작성완료' : '미작성'}
             </Box>
           )}
         </Box>
@@ -198,7 +205,12 @@ const PersonalReport: React.FC<Props> = ({
         const entry = slot.projectId ? entries[slot.projectId] : null;
         const available = projects
           .filter((p) => !takenIds.includes(p.id) || p.id === slot.projectId)
-          .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+          .sort((a, b) => {
+            const aEng = /^[A-Za-z]/.test(a.name);
+            const bEng = /^[A-Za-z]/.test(b.name);
+            if (aEng !== bEng) return aEng ? -1 : 1;
+            return a.name.localeCompare(b.name, aEng ? 'en' : 'ko');
+          });
 
         return (
           <Paper key={slot.slotId} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
@@ -302,7 +314,7 @@ const PersonalReport: React.FC<Props> = ({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert severity="success" onClose={() => setSaved(false)} sx={{ width: '100%' }}>
-          저장되었습니다.
+          작성 완료 되었습니다.
         </Alert>
       </Snackbar>
     </Box>
