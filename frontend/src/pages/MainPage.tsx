@@ -71,7 +71,7 @@ const MainPage: React.FC = () => {
       <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
         {/* 헤더 */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>주간보고 전체</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>주간현황</Typography>
           {isAdmin && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
               주차 추가

@@ -30,6 +30,8 @@ def create_user(db: Session, req: UserCreateRequest) -> UserResponse:
 
 def update_user(db: Session, user_id: int, req: UserUpdateRequest) -> UserResponse:
     user = _find(db, user_id)
+    if user.username == "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin 계정은 수정할 수 없습니다.")
     user.display_name = req.display_name
     user.role = req.role
     user.is_active = req.is_active
@@ -40,6 +42,8 @@ def update_user(db: Session, user_id: int, req: UserUpdateRequest) -> UserRespon
 
 def delete_user(db: Session, user_id: int) -> None:
     user = _find(db, user_id)
+    if user.username == "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin 계정은 삭제할 수 없습니다.")
     db.delete(user)
     db.commit()
 
