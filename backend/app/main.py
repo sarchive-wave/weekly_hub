@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import CORS_ORIGINS
 from app.database import engine
 from app import models
-from app.models import user, project, week, report
 from app.database import Base
 from app.routers import auth, users, projects, weeks, reports
 from app import seed

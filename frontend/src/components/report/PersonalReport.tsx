@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Box, Typography, Button, ButtonGroup, CircularProgress,
+  Box, Typography, Button, CircularProgress,
   Paper, TextField, IconButton, Select, MenuItem, FormControl,
   Snackbar, Alert,
 } from '@mui/material';
@@ -201,7 +201,6 @@ const PersonalReport: React.FC<Props> = ({
 
       {/* 편집 모드: 슬롯 카드 */}
       {canEdit && slots.map((slot) => {
-        const project = projects.find((p) => p.id === slot.projectId);
         const entry = slot.projectId ? entries[slot.projectId] : null;
         const available = projects
           .filter((p) => !takenIds.includes(p.id) || p.id === slot.projectId)
