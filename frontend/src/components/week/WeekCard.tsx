@@ -31,8 +31,9 @@ function parseDateRange(start: string, end: string): string {
   return `${fmt(s)} ~ ${fmt(e)}`;
 }
 
+// 인접 주차가 확실히 구분되도록 주차 번호 기준으로 색 배정 (1주=파랑, 2주=초록, 3주=주황 ...)
 const WEEK_PALETTE = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1'];
-const weekColor = (w: Week) => WEEK_PALETTE[(w.week_num - 1 + w.month) % WEEK_PALETTE.length];
+const weekColor = (w: Week) => WEEK_PALETTE[(w.week_num - 1) % WEEK_PALETTE.length];
 
 const WeekCard: React.FC<Props> = ({ week, onClick, onEdit, onDelete, isAdmin }) => {
   const dateRange = week.start_date && week.end_date
