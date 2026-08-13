@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box, Button, Paper, Table, TableHead, TableBody, TableRow, TableCell,
-  IconButton, Chip, Stack, Typography, Divider, TextField, InputAdornment, TablePagination,
+  IconButton, Chip, Stack, Typography, TextField, InputAdornment, TablePagination,
   Select, MenuItem, FormControl, InputLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Group as GroupIcon } from '@mui/icons-material';
 import ProjectFormDialog from '../project/ProjectFormDialog';
 import MembersDialog from '../project/MembersDialog';
-import MasterTab from './MasterTab';
 import { projectApi } from '../../api/projectApi';
 import type { Project } from '../../types';
 
@@ -150,9 +149,6 @@ const ProjectAdminTab: React.FC = () => {
           labelDisplayedRows={({ from, to, count }) => `${from}–${to} / 총 ${count}`}
         />
       )}
-
-      <Divider sx={{ my: 3 }}><Typography variant="caption" color="text.secondary">유형 · 상태 관리</Typography></Divider>
-      <MasterTab />
 
       <ProjectFormDialog
         open={formOpen}

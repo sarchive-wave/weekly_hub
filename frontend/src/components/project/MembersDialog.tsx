@@ -73,7 +73,7 @@ const MembersDialog: React.FC<Props> = ({ open, projectId, onClose, onSaved }) =
                   onChange={(e) => setRow(i, { user_id: Number(e.target.value) })}
                 >
                   {users
-                    .filter((u) => u.id === row.user_id || !taken.includes(u.id))
+                    .filter((u) => (u.is_active || u.id === row.user_id) && (u.id === row.user_id || !taken.includes(u.id)))
                     .map((u) => <MenuItem key={u.id} value={u.id}>{u.display_name}{u.position ? ` (${u.position})` : ''}</MenuItem>)}
                 </Select>
               </FormControl>
