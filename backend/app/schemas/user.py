@@ -13,6 +13,7 @@ class UserCreateRequest(BaseModel):
 
 
 class UserUpdateRequest(BaseModel):
+    username: str
     display_name: str
     role: str
     is_active: bool

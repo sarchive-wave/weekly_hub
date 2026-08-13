@@ -17,7 +17,7 @@ const AccountTab: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [resetTarget, setResetTarget] = useState<User | null>(null);
   const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'user', position: '', team: '' });
-  const [editForm, setEditForm] = useState({ display_name: '', role: 'user', is_active: true, position: '', team: '' });
+  const [editForm, setEditForm] = useState({ username: '', display_name: '', role: 'user', is_active: true, position: '', team: '' });
   const [newPw, setNewPw] = useState('');
 
   useEffect(() => { userApi.list().then(setUsers); }, []);
@@ -39,9 +39,12 @@ const AccountTab: React.FC = () => {
 
   const handleEdit = async () => {
     if (!editTarget) return;
-    const updated = await userApi.update(editTarget.id, editForm);
-    setUsers((prev) => prev.map((u) => u.id === updated.id ? updated : u));
-    setEditTarget(null);
+    if (!editForm.username.trim()) { alert('아이디를 입력하세요.'); return; }
+    try {
+      const updated = await userApi.update(editTarget.id, editForm);
+      setUsers((prev) => prev.map((u) => u.id === updated.id ? updated : u));
+      setEditTarget(null);
+    } catch (e: any) { alert(e.response?.data?.detail || '수정에 실패했습니다.'); }
   };
 
   const handleDelete = async () => {
@@ -90,7 +93,7 @@ const AccountTab: React.FC = () => {
                   <Chip label={u.is_active ? '활성' : '비활성'} size="small" color={u.is_active ? 'success' : 'default'} />
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => { setEditTarget(u); setEditForm({ display_name: u.display_name, role: u.role, is_active: u.is_active, position: u.position || '', team: u.team || '' }); }}>
+                  <IconButton size="small" onClick={() => { setEditTarget(u); setEditForm({ username: u.username, display_name: u.display_name, role: u.role, is_active: u.is_active, position: u.position || '', team: u.team || '' }); }}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton size="small" onClick={() => setResetTarget(u)}>
@@ -142,6 +145,7 @@ const AccountTab: React.FC = () => {
         <DialogTitle>계정 수정</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField label="아이디" size="small" value={editForm.username} onChange={(e) => setEditForm((f) => ({ ...f, username: e.target.value }))} fullWidth />
             <TextField label="이름" size="small" value={editForm.display_name} onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))} fullWidth />
             <FormControl size="small" fullWidth>
               <InputLabel>직책</InputLabel>

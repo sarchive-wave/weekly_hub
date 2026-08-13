@@ -34,6 +34,11 @@ def update_user(db: Session, user_id: int, req: UserUpdateRequest) -> UserRespon
     user = _find(db, user_id)
     if user.username == "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin 계정은 수정할 수 없습니다.")
+    # 아이디 변경 시 중복 검사
+    if req.username and req.username != user.username:
+        if db.query(User).filter(User.username == req.username, User.id != user_id).first():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 사용 중인 아이디입니다.")
+        user.username = req.username
     user.display_name = req.display_name
     user.role = req.role
     user.is_active = req.is_active

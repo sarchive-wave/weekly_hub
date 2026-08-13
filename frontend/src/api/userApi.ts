@@ -10,7 +10,7 @@ export const userApi = {
     const res = await client.post('/api/v1/users', data);
     return res.data as User;
   },
-  update: async (id: number, data: { display_name: string; role: string; is_active: boolean; position?: string; team?: string }) => {
+  update: async (id: number, data: { username: string; display_name: string; role: string; is_active: boolean; position?: string; team?: string }) => {
     const res = await client.put(`/api/v1/users/${id}`, data);
     return res.data as User;
   },
