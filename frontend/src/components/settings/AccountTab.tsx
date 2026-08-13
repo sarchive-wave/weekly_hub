@@ -23,12 +23,18 @@ const AccountTab: React.FC = () => {
   useEffect(() => { userApi.list().then(setUsers); }, []);
 
   const handleCreate = async () => {
+    if (!form.username.trim()) { alert('아이디를 입력하세요.'); return; }
+    if (form.password.length < 6) { alert('비밀번호는 6자 이상이어야 합니다.'); return; }
+    if (!form.display_name.trim()) { alert('이름을 입력하세요.'); return; }
     try {
-      const user = await userApi.create(form);
-      setUsers((prev) => [...prev, user]);
+      await userApi.create(form);
       setCreateOpen(false);
       setForm({ username: '', password: '', display_name: '', role: 'user', position: '', team: '' });
-    } catch (e: any) { alert(e.response?.data?.detail || '생성 실패'); }
+      const list = await userApi.list();   // 서버에서 최신 목록 재조회
+      setUsers(list);
+    } catch (e: any) {
+      alert(e.response?.data?.detail || '생성에 실패했습니다. (네트워크/서버 상태를 확인하세요)');
+    }
   };
 
   const handleEdit = async () => {
