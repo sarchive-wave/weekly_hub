@@ -30,9 +30,15 @@ const colorFor = (s?: string | null) => {
   return PALETTE[sum % PALETTE.length];
 };
 
+const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const todayLabel = () => {
+  const d = new Date();
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()} (${DAYS[d.getDay()]})`;
+};
+
 // 팀원 이름 칩 (최대 4명 + 외 N)
 const MemberNames: React.FC<{ names: string[] }> = ({ names }) => {
-  if (names.length === 0) return <Typography variant="body2" color="text.disabled">-</Typography>;
+  if (names.length === 0) return null;
   const shown = names.slice(0, 4);
   const rest = names.length - shown.length;
   return (
@@ -69,17 +75,16 @@ const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ i
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
-          <TypeChip name={item.type_name} />
-          <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled' }}>{item.code}</Typography>
-        </Stack>
+        <TypeChip name={item.type_name} />
         <IconButton size="small" {...attributes} {...listeners}
           onClick={(e) => e.stopPropagation()}
           sx={{ cursor: 'grab', color: '#CBD5E1', '&:active': { cursor: 'grabbing' } }}>
           <DragIndicatorIcon fontSize="small" />
         </IconButton>
       </Box>
-      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.25, lineHeight: 1.3 }}>{item.name}</Typography>
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.25, lineHeight: 1.3 }}>
+        {item.code ? `${item.code} ` : ''}{item.name}
+      </Typography>
       <Stack spacing={1}>
         <Typography variant="body2" sx={{ color: 'text.primary' }}>PM · {item.pm_name ?? '미지정'}</Typography>
         <Box>
@@ -110,8 +115,12 @@ const SortableRow: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ it
         </IconButton>
       </TableCell>
       <TableCell><TypeChip name={item.type_name} /></TableCell>
-      <TableCell><Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled' }}>{item.code}</Typography></TableCell>
-      <TableCell><Typography variant="body2" fontWeight={600}>{item.name}</Typography></TableCell>
+      <TableCell>
+        <Typography variant="body2" fontWeight={600}>
+          {item.code && <Box component="span" sx={{ fontFamily: 'monospace', color: 'text.disabled', mr: 0.75 }}>{item.code}</Box>}
+          {item.name}
+        </Typography>
+      </TableCell>
       <TableCell><Typography variant="body2">{item.pm_name ?? '미지정'}</Typography></TableCell>
       <TableCell sx={{ maxWidth: 300 }}><MemberNames names={item.member_names} /></TableCell>
     </TableRow>
@@ -159,6 +168,7 @@ const DashboardPage: React.FC = () => {
             </Typography>
           </Box>
           <Stack direction="row" spacing={1.5} alignItems="center">
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>{todayLabel()}</Typography>
             <ToggleButtonGroup size="small" exclusive value={view} onChange={(_, v) => v && setView(v)}>
               <ToggleButton value="card" sx={{ px: 1.2 }}><Tooltip title="카드"><ViewModuleIcon fontSize="small" /></Tooltip></ToggleButton>
               <ToggleButton value="list" sx={{ px: 1.2 }}><Tooltip title="리스트"><ViewListIcon fontSize="small" /></Tooltip></ToggleButton>
@@ -205,8 +215,7 @@ const DashboardPage: React.FC = () => {
                     <TableRow sx={{ bgcolor: '#F8FAFC' }}>
                       <TableCell sx={{ px: 0.5 }} />
                       <TableCell>유형</TableCell>
-                      <TableCell>코드</TableCell>
-                      <TableCell>프로젝트명</TableCell>
+                      <TableCell>프로젝트</TableCell>
                       <TableCell>PM</TableCell>
                       <TableCell>팀원</TableCell>
                     </TableRow>

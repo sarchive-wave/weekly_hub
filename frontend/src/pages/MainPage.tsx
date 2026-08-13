@@ -19,7 +19,8 @@ const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const [weeks, setWeeks] = useState<Week[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editWeek, setEditWeek] = useState<Week | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Week | null>(null);
 
   const now = new Date();
@@ -50,7 +51,10 @@ const MainPage: React.FC = () => {
     else setSelectedMonth((m) => m + 1);
   };
 
-  const handleCreated = (week: Week) => {
+  const openAdd = () => { setEditWeek(null); setFormOpen(true); };
+  const openEdit = (w: Week) => { setEditWeek(w); setFormOpen(true); };
+
+  const handleSaved = (week: Week) => {
     weekApi.list().then(setWeeks);
     setSelectedYear(week.year);
     setSelectedMonth(week.month);
@@ -73,7 +77,7 @@ const MainPage: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>주간현황</Typography>
           {isAdmin && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openAdd}>
               주차 추가
             </Button>
           )}
@@ -175,7 +179,7 @@ const MainPage: React.FC = () => {
               {selectedYear}년 {selectedMonth}월에 등록된 주차가 없습니다.
             </Typography>
             {isAdmin && (
-              <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)} sx={{ mt: 2 }}>
+              <Button variant="outlined" startIcon={<AddIcon />} onClick={openAdd} sx={{ mt: 2 }}>
                 주차 추가하기
               </Button>
             )}
@@ -187,6 +191,7 @@ const MainPage: React.FC = () => {
                 <WeekCard
                   week={week}
                   onClick={() => navigate(`/weeks/${week.id}`)}
+                  onEdit={() => openEdit(week)}
                   onDelete={() => setDeleteTarget(week)}
                   isAdmin={isAdmin}
                 />
@@ -196,7 +201,7 @@ const MainPage: React.FC = () => {
         )}
       </Box>
 
-      <WeekCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={handleCreated} />
+      <WeekCreateDialog open={formOpen} initial={editWeek} onClose={() => setFormOpen(false)} onSaved={handleSaved} />
 
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
         <DialogTitle>주차 삭제</DialogTitle>

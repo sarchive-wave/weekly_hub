@@ -20,6 +20,11 @@ def create_week(req: WeekCreateRequest, db: Session = Depends(get_db), _: User =
     return week_service.create_week(db, req)
 
 
+@router.put("/{week_id}", response_model=WeekResponse)
+def update_week(week_id: int, req: WeekCreateRequest, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    return week_service.update_week(db, week_id, req)
+
+
 @router.delete("/{week_id}", status_code=204)
 def delete_week(week_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     week_service.delete_week(db, week_id)

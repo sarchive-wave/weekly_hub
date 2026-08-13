@@ -14,7 +14,7 @@ interface Props {
 const NAV = [
   { label: '대시보드', path: '/' },
   { label: '종료', path: '/closed' },
-  { label: '주간회의', path: '/weekly' },
+  { label: '주간보고', path: '/weekly' },
 ];
 
 const AppLayout: React.FC<Props> = ({ children }) => {

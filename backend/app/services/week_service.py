@@ -21,7 +21,14 @@ def get_weeks(db: Session) -> List[WeekResponse]:
     return result
 
 
+def _validate_dates(req: WeekCreateRequest) -> None:
+    if req.start_date and req.end_date and req.end_date < req.start_date:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="종료일이 시작일보다 빠를 수 없습니다.")
+
+
 def create_week(db: Session, req: WeekCreateRequest) -> WeekResponse:
+    _validate_dates(req)
     existing = db.query(Week).filter(
         Week.year == req.year, Week.month == req.month, Week.week_num == req.week_num
     ).first()
@@ -35,6 +42,29 @@ def create_week(db: Session, req: WeekCreateRequest) -> WeekResponse:
     r = WeekResponse.model_validate(week)
     r.total_members = db.query(User).filter(User.is_active == True).count()
     r.done_members = 0
+    return r
+
+
+def update_week(db: Session, week_id: int, req: WeekCreateRequest) -> WeekResponse:
+    week = _find(db, week_id)
+    _validate_dates(req)
+    dup = db.query(Week).filter(
+        Week.year == req.year, Week.month == req.month, Week.week_num == req.week_num,
+        Week.id != week_id,
+    ).first()
+    if dup:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 주차입니다.")
+    week.year = req.year
+    week.month = req.month
+    week.week_num = req.week_num
+    week.title = req.title
+    week.start_date = req.start_date
+    week.end_date = req.end_date
+    db.commit()
+    db.refresh(week)
+    r = WeekResponse.model_validate(week)
+    r.total_members = db.query(User).filter(User.is_active == True).count()
+    r.done_members = db.query(Report).filter(Report.week_id == week.id, Report.status == "done").count()
     return r
 
 

@@ -129,7 +129,7 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>메뉴 노출</Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControlLabel control={<Checkbox size="small" checked={showDashboard} onChange={(e) => setShowDashboard(e.target.checked)} />} label="대시보드" />
-          <FormControlLabel control={<Checkbox size="small" checked={showWeekly} onChange={(e) => setShowWeekly(e.target.checked)} />} label="주간회의" />
+          <FormControlLabel control={<Checkbox size="small" checked={showWeekly} onChange={(e) => setShowWeekly(e.target.checked)} />} label="주간보고" />
         </Box>
 
         {initial && (

@@ -10,6 +10,10 @@ export const weekApi = {
     const res = await client.post('/api/v1/weeks', data);
     return res.data as Week;
   },
+  update: async (id: number, data: { year: number; month: number; week_num: number; title: string; start_date?: string | null; end_date?: string | null }) => {
+    const res = await client.put(`/api/v1/weeks/${id}`, data);
+    return res.data as Week;
+  },
   delete: async (weekId: number) => {
     await client.delete(`/api/v1/weeks/${weekId}`);
   },

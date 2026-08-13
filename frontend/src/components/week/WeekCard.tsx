@@ -1,11 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardActionArea, Typography, Box, IconButton } from '@mui/material';
-import { Delete as DeleteIcon, Group as GroupIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Edit as EditIcon, Group as GroupIcon } from '@mui/icons-material';
 import type { Week } from '../../types';
 
 interface Props {
   week: Week;
   onClick: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
   isAdmin: boolean;
 }
@@ -30,7 +31,7 @@ function parseDateRange(start: string, end: string): string {
   return `${fmt(s)} ~ ${fmt(e)}`;
 }
 
-const WeekCard: React.FC<Props> = ({ week, onClick, onDelete, isAdmin }) => {
+const WeekCard: React.FC<Props> = ({ week, onClick, onEdit, onDelete, isAdmin }) => {
   const dateRange = week.start_date && week.end_date
     ? parseDateRange(week.start_date, week.end_date)
     : calcDateRange(week.year, week.month, week.week_num);
@@ -60,14 +61,27 @@ const WeekCard: React.FC<Props> = ({ week, onClick, onDelete, isAdmin }) => {
           )}
         </CardContent>
       </CardActionArea>
-      {isAdmin && onDelete && (
-        <IconButton
-          size="small"
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          sx={{ position: 'absolute', top: 8, right: 8, color: 'text.disabled', '&:hover': { color: 'error.main' } }}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
+      {isAdmin && (
+        <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex' }}>
+          {onEdit && (
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main' } }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          )}
+          {onDelete && (
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          )}
+        </Box>
       )}
     </Card>
   );

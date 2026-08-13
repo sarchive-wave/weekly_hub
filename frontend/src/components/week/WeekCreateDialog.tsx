@@ -8,14 +8,15 @@ import type { Week } from '../../types';
 
 interface Props {
   open: boolean;
+  initial?: Week | null;   // null이면 생성
   onClose: () => void;
-  onCreated: (week: Week) => void;
+  onSaved: (week: Week) => void;
 }
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
 
-const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
+const WeekCreateDialog: React.FC<Props> = ({ open, initial, onClose, onSaved }) => {
   const [year, setYear] = useState(currentYear);
   const [month, setMonth] = useState(currentMonth);
   const [weekNum, setWeekNum] = useState(1);
@@ -25,10 +26,22 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
   const title = `${month}월 ${weekNum}주차`;
 
-  // 연도/월/주차 변경 시 해당 주 목요일 자동 계산
+  // 초기화
   useEffect(() => {
+    if (!open) return;
+    if (initial) {
+      setYear(initial.year); setMonth(initial.month); setWeekNum(initial.week_num);
+      setStartDate(initial.start_date || ''); setEndDate(initial.end_date || '');
+    } else {
+      setYear(currentYear); setMonth(currentMonth); setWeekNum(1);
+    }
+  }, [open, initial]);
+
+  // 생성 모드에서만 해당 주 목요일 자동 계산(수정 모드는 기존 날짜 보존)
+  useEffect(() => {
+    if (!open || initial) return;
     const firstDay = new Date(year, month - 1, 1);
-    const firstDow = firstDay.getDay(); // 0=일, 1=월 ... 6=토
+    const firstDow = firstDay.getDay();
     const daysToMonday = firstDow === 0 ? -6 : 1 - firstDow;
     const monday = new Date(year, month - 1, 1 + daysToMonday + (weekNum - 1) * 7);
     const thursday = new Date(monday);
@@ -36,20 +49,21 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
     const iso = thursday.toISOString().split('T')[0];
     setStartDate(iso);
     setEndDate(iso);
-  }, [year, month, weekNum]);
+  }, [year, month, weekNum, open, initial]);
 
   const handleSubmit = async () => {
+    if (startDate && endDate && endDate < startDate) {
+      alert('종료일이 시작일보다 빠를 수 없습니다.');
+      return;
+    }
     setSubmitting(true);
     try {
-      const week = await weekApi.create({
-        year, month, week_num: weekNum, title,
-        start_date: startDate || null,
-        end_date: endDate || null,
-      });
-      onCreated(week);
+      const payload = { year, month, week_num: weekNum, title, start_date: startDate || null, end_date: endDate || null };
+      const saved = initial ? await weekApi.update(initial.id, payload) : await weekApi.create(payload);
+      onSaved(saved);
       onClose();
     } catch (e: any) {
-      alert(e.response?.data?.detail || '생성에 실패했습니다.');
+      alert(e.response?.data?.detail || '저장에 실패했습니다.');
     } finally {
       setSubmitting(false);
     }
@@ -57,7 +71,7 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>주차 추가</DialogTitle>
+      <DialogTitle>{initial ? '주차 수정' : '주차 추가'}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           <Box sx={{ display: 'flex', gap: 1.5 }}>
@@ -93,23 +107,15 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <TextField
-                type="date"
-                size="small"
-                value={startDate}
+                type="date" size="small" value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement)?.showPicker?.()}
-                sx={{ flex: 1, cursor: 'pointer' }}
-                inputProps={{ style: { fontSize: 13, cursor: 'pointer' } }}
+                sx={{ flex: 1 }} inputProps={{ style: { fontSize: 13 } }}
               />
               <Typography variant="body2" color="text.secondary">~</Typography>
               <TextField
-                type="date"
-                size="small"
-                value={endDate}
+                type="date" size="small" value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                onClick={(e) => (e.currentTarget.querySelector('input') as HTMLInputElement)?.showPicker?.()}
-                sx={{ flex: 1, cursor: 'pointer' }}
-                inputProps={{ style: { fontSize: 13, cursor: 'pointer' } }}
+                sx={{ flex: 1 }} inputProps={{ style: { fontSize: 13 } }}
               />
             </Box>
           </Box>
@@ -117,7 +123,7 @@ const WeekCreateDialog: React.FC<Props> = ({ open, onClose, onCreated }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">취소</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={submitting}>추가</Button>
+        <Button onClick={handleSubmit} variant="contained" disabled={submitting}>{initial ? '저장' : '추가'}</Button>
       </DialogActions>
     </Dialog>
   );

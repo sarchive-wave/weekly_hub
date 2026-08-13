@@ -125,7 +125,7 @@ const ProjectDetailPage: React.FC = () => {
         {/* 탭 */}
         <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, mt: 2, overflow: 'hidden' }}>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: '1px solid #E2E8F0', px: 2 }}>
-            <Tab label="주간 진행 (read)" />
+            <Tab label="주간보고 (read)" />
             <Tab label="변경 이력" />
           </Tabs>
           <Box sx={{ p: 2.5 }}>

@@ -3,7 +3,7 @@ import {
   Box, Button, Paper, Table, TableHead, TableBody, TableRow, TableCell,
   IconButton, Chip, Stack, Typography, Divider,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import ProjectFormDialog from '../project/ProjectFormDialog';
 import MasterTab from './MasterTab';
 import { projectApi } from '../../api/projectApi';
@@ -19,6 +19,12 @@ const ProjectAdminTab: React.FC = () => {
 
   const openCreate = () => { setEditTarget(null); setFormOpen(true); };
   const openEdit = (p: Project) => { setEditTarget(p); setFormOpen(true); };
+
+  const handleDelete = async (p: Project) => {
+    if (!confirm(`"${p.name}" 프로젝트를 삭제하시겠습니까?\n관련 주간보고 항목도 함께 삭제됩니다.`)) return;
+    try { await projectApi.remove(p.id); load(); }
+    catch (e: any) { alert(e.response?.data?.detail || '삭제 실패'); }
+  };
 
   return (
     <Box>
@@ -51,11 +57,12 @@ const ProjectAdminTab: React.FC = () => {
                 <TableCell>
                   <Stack direction="row" spacing={0.5}>
                     {p.show_in_dashboard && <Chip size="small" label="대시보드" sx={{ height: 20, fontSize: 11 }} />}
-                    {p.show_in_weekly && <Chip size="small" label="주간회의" sx={{ height: 20, fontSize: 11 }} />}
+                    {p.show_in_weekly && <Chip size="small" label="주간보고" sx={{ height: 20, fontSize: 11 }} />}
                   </Stack>
                 </TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => openEdit(p)}><EditIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" color="error" onClick={() => handleDelete(p)}><DeleteIcon fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
             ))}
