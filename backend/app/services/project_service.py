@@ -267,6 +267,13 @@ def _set_status(db: Session, project_id: int, status_name: str, action: str, act
                                     old=_display(db, "status_id", project.status_id),
                                     new=status_name)
         project.status_id = new_id
+        # 종료 시 메뉴 노출 자동 OFF, 종료 취소(진행중) 시 자동 ON
+        if status_name == STATUS_DONE:
+            project.show_in_dashboard = False
+            project.show_in_weekly = False
+        elif status_name == STATUS_ACTIVE:
+            project.show_in_dashboard = True
+            project.show_in_weekly = True
     db.commit()
     db.refresh(project)
     return _to_response(db, project)
