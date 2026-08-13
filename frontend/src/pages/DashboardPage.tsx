@@ -84,7 +84,7 @@ const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ i
         </IconButton>
       </Box>
       <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.25, lineHeight: 1.3 }}>
-        {item.code ? `${item.code} ` : ''}{item.name}
+        {item.code ? `${item.code} | ` : ''}{item.name}
       </Typography>
       <Stack spacing={1}>
         <Typography variant="body2" sx={{ color: 'text.primary' }}>PM · {item.pm_name ?? '미지정'}</Typography>
@@ -118,7 +118,7 @@ const SortableRow: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ it
       <TableCell><TypeChip name={item.type_name} /></TableCell>
       <TableCell>
         <Typography variant="body2" fontWeight={600}>
-          {item.code && <Box component="span" sx={{ fontFamily: 'monospace', color: 'text.disabled', mr: 0.75 }}>{item.code}</Box>}
+          {item.code && <Box component="span" sx={{ fontFamily: 'monospace', color: 'text.disabled', mr: 0.75 }}>{item.code} |</Box>}
           {item.name}
         </Typography>
       </TableCell>
