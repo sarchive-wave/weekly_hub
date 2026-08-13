@@ -22,6 +22,7 @@ export interface Project {
   id: number;
   code?: string | null;
   name: string;
+  full_name?: string | null;
   description?: string | null;
   type_id?: number | null;
   type_name?: string | null;
@@ -97,6 +98,7 @@ export interface DashboardResponse {
 export interface ProjectPayload {
   code?: string | null;
   name: string;
+  full_name?: string | null;
   description?: string | null;
   type_id?: number | null;
   pm_user_id?: number | null;

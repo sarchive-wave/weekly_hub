@@ -9,8 +9,9 @@ class Project(Base):
     __table_args__ = {"schema": "common"}
 
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(50), unique=True)          # 프로젝트 코드
+    code = Column(String(50), unique=True)          # 프로젝트 코드(영문 약칭 등)
     name = Column(String(100), unique=True, nullable=False)
+    full_name = Column(String(200))                 # 정식 명칭(목록 비노출)
     description = Column(Text)                       # 소개
     type_id = Column(Integer, ForeignKey("common.project_types.id"))
     status_id = Column(Integer, ForeignKey("common.project_statuses.id"))

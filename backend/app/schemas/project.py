@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class ProjectCreateRequest(BaseModel):
     code: Optional[str] = None          # 미지정 시 서버가 PRJ-000N 자동 생성
     name: str
+    full_name: Optional[str] = None     # 정식 명칭
     description: Optional[str] = None
     type_id: Optional[int] = None
     status_id: Optional[int] = None     # 미지정 시 '진행중'
@@ -22,6 +23,7 @@ class ProjectCreateRequest(BaseModel):
 class ProjectUpdateRequest(BaseModel):
     code: Optional[str] = None
     name: str
+    full_name: Optional[str] = None
     description: Optional[str] = None
     type_id: Optional[int] = None
     status_id: Optional[int] = None
@@ -59,6 +61,7 @@ class ProjectResponse(BaseModel):
     id: int
     code: Optional[str] = None
     name: str
+    full_name: Optional[str] = None
     description: Optional[str] = None
     type_id: Optional[int] = None
     type_name: Optional[str] = None

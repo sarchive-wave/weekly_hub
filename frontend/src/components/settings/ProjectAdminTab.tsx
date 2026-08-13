@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box, Button, Paper, Table, TableHead, TableBody, TableRow, TableCell,
   IconButton, Chip, Stack, Typography, Divider, TextField, InputAdornment, TablePagination,
+  Select, MenuItem, FormControl, InputLabel,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Group as GroupIcon } from '@mui/icons-material';
 import ProjectFormDialog from '../project/ProjectFormDialog';
@@ -18,6 +19,7 @@ const ProjectAdminTab: React.FC = () => {
   const [editTarget, setEditTarget] = useState<Project | null>(null);
   const [membersTarget, setMembersTarget] = useState<Project | null>(null);
   const [keyword, setKeyword] = useState('');
+  const [searchField, setSearchField] = useState<'all' | 'code' | 'name' | 'type' | 'status'>('all');
   const [page, setPage] = useState(0);
 
   const load = () => { projectApi.list().then(setProjects); };
@@ -35,9 +37,18 @@ const ProjectAdminTab: React.FC = () => {
   // 검색(코드·명·상태) + 완료는 맨 뒤로 정렬
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
+    const fieldsOf = (p: Project) => {
+      switch (searchField) {
+        case 'code': return [p.code];
+        case 'name': return [p.name];
+        case 'type': return [p.type_name];
+        case 'status': return [p.status_name];
+        default: return [p.code, p.name, p.type_name, p.status_name];
+      }
+    };
     const matched = projects.filter((p) => {
       if (!kw) return true;
-      return [p.code, p.name, p.status_name].some((v) => (v ?? '').toLowerCase().includes(kw));
+      return fieldsOf(p).some((v) => (v ?? '').toLowerCase().includes(kw));
     });
     return matched
       .map((p, i) => ({ p, i }))
@@ -47,7 +58,7 @@ const ProjectAdminTab: React.FC = () => {
         return da - db || a.i - b.i;  // 완료 뒤로, 그 외 기존 순서 유지
       })
       .map((x) => x.p);
-  }, [projects, keyword]);
+  }, [projects, keyword, searchField]);
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const safePage = Math.min(page, Math.max(0, pageCount - 1));
@@ -62,13 +73,28 @@ const ProjectAdminTab: React.FC = () => {
         <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openCreate}>프로젝트 등록</Button>
       </Box>
 
-      {/* 검색 (코드 · 명 · 상태) */}
-      <TextField
-        size="small" fullWidth placeholder="코드 · 프로젝트명 · 상태로 검색"
-        value={keyword} onChange={(e) => onSearch(e.target.value)}
-        sx={{ mb: 1.5 }}
-        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-      />
+      {/* 검색: 구분자 선택 + 검색어 */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+        <FormControl size="small" sx={{ minWidth: 130 }}>
+          <InputLabel>검색 항목</InputLabel>
+          <Select
+            value={searchField}
+            label="검색 항목"
+            onChange={(e) => { setSearchField(e.target.value as typeof searchField); setPage(0); }}
+          >
+            <MenuItem value="all">전체</MenuItem>
+            <MenuItem value="code">코드</MenuItem>
+            <MenuItem value="name">프로젝트명</MenuItem>
+            <MenuItem value="type">유형</MenuItem>
+            <MenuItem value="status">상태</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          size="small" fullWidth placeholder="검색어 입력"
+          value={keyword} onChange={(e) => onSearch(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+        />
+      </Box>
 
       <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
         <Table size="small">

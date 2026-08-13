@@ -30,7 +30,7 @@ def _pos_rank(position) -> int:
 
 # 감사 로그용 필드 라벨
 FIELD_LABELS = {
-    "name": "프로젝트명", "code": "코드", "description": "소개",
+    "name": "프로젝트명", "code": "코드", "full_name": "정식명칭", "description": "소개",
     "type_id": "유형", "status_id": "상태", "pm_user_id": "PM",
     "start_date": "시작일", "end_date": "마감예정일",
     "nas_path": "NAS 경로", "git_url": "Git 저장소",
@@ -138,7 +138,7 @@ def create_project(db: Session, req: ProjectCreateRequest, actor_id: int) -> Pro
 
     status_id = req.status_id or _status_id(db, STATUS_ACTIVE)
     project = Project(
-        code=req.code or None, name=req.name, description=req.description,
+        code=req.code or None, name=req.name, full_name=req.full_name, description=req.description,
         type_id=req.type_id, status_id=status_id, pm_user_id=req.pm_user_id,
         start_date=req.start_date, end_date=req.end_date,
         nas_path=req.nas_path, git_url=req.git_url,
@@ -170,7 +170,7 @@ def update_project(db: Session, project_id: int, req: ProjectUpdateRequest, acto
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 프로젝트 코드입니다.")
 
     # 필드별 변경 감사 로그
-    for field in ("name", "code", "description", "type_id",
+    for field in ("name", "code", "full_name", "description", "type_id",
                   "pm_user_id", "start_date", "end_date", "nas_path", "git_url",
                   "show_in_dashboard", "show_in_weekly"):
         if field not in provided:
@@ -355,7 +355,8 @@ def _display(db: Session, field: str, value):
 def _to_response(db: Session, project: Project) -> ProjectResponse:
     members = _member_responses(db, project.id)
     return ProjectResponse(
-        id=project.id, code=project.code, name=project.name, description=project.description,
+        id=project.id, code=project.code, name=project.name, full_name=project.full_name,
+        description=project.description,
         type_id=project.type_id, type_name=(project.type.name if project.type else None),
         status_id=project.status_id, status_name=(project.status.name if project.status else None),
         pm_user_id=project.pm_user_id, pm_name=_pm_name(db, project),

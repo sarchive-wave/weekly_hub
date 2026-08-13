@@ -17,7 +17,7 @@ interface Props {
 }
 
 const empty: ProjectPayload = {
-  name: '', code: '', description: '', type_id: null, pm_user_id: null,
+  name: '', code: '', full_name: '', description: '', type_id: null, pm_user_id: null,
   start_date: null, end_date: null, nas_path: '', git_url: '',
 };
 
@@ -38,7 +38,7 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
     userApi.list().then(setUsers).catch(() => {});
     if (initial) {
       setForm({
-        name: initial.name, code: initial.code ?? '', description: initial.description ?? '',
+        name: initial.name, code: initial.code ?? '', full_name: initial.full_name ?? '', description: initial.description ?? '',
         type_id: initial.type_id ?? null, pm_user_id: initial.pm_user_id ?? null,
         start_date: initial.start_date ?? null, end_date: initial.end_date ?? null,
         nas_path: initial.nas_path ?? '', git_url: initial.git_url ?? '',
@@ -104,6 +104,7 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, pt: 1 }}>
           <TextField label="프로젝트명 *" size="small" value={form.name} onChange={(e) => set('name', e.target.value)} />
           <TextField label="코드 (미입력 시 자동)" size="small" value={form.code ?? ''} onChange={(e) => set('code', e.target.value)} />
+          <TextField label="정식 명칭 (선택 · 목록 미표시)" size="small" value={form.full_name ?? ''} onChange={(e) => set('full_name', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
           <FormControl size="small">
             <InputLabel>유형</InputLabel>
             <Select label="유형" value={form.type_id ?? ''} onChange={(e) => set('type_id', e.target.value === '' ? null : Number(e.target.value))}>
