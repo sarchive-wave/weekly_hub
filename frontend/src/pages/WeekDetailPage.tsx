@@ -76,7 +76,7 @@ const WeekDetailPage: React.FC = () => {
         <Box sx={{
           width: SIDEBAR_WIDTH,
           flexShrink: 0,
-          borderRight: '1px solid #E2E8F0',
+          borderRight: '1px solid', borderColor: 'divider',
           minHeight: 'calc(100vh - 64px)',
           bgcolor: 'background.paper',
           display: 'flex',
@@ -125,7 +125,7 @@ const WeekDetailPage: React.FC = () => {
                 sx={{
                   borderRadius: 1.5,
                   mb: 0.5,
-                  '&.Mui-selected': { bgcolor: '#EFF6FF' },
+                  '&.Mui-selected': { bgcolor: 'action.selected' },
                 }}
               >
                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#3B82F6', mr: 1.5, flexShrink: 0 }} />
@@ -144,7 +144,7 @@ const WeekDetailPage: React.FC = () => {
                   sx={{
                     borderRadius: 1.5,
                     mb: 0.5,
-                    '&.Mui-selected': { bgcolor: '#F1F5F9' },
+                    '&.Mui-selected': { bgcolor: 'action.selected' },
                   }}
                 >
                   <Box

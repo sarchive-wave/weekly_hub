@@ -98,8 +98,8 @@ const OverallReport: React.FC<Props> = ({ weekId, title }) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="h5" fontWeight={700}>{title} 전체 주간보고</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="subtitle1" fontWeight={700}>{title} 전체 주간보고</Typography>
         <Button
           variant="outlined"
           size="small"
@@ -111,9 +111,6 @@ const OverallReport: React.FC<Props> = ({ weekId, title }) => {
           미리보기
         </Button>
       </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        팀 전체 업무를 프로젝트별로 취합한 내용입니다.
-      </Typography>
       {summary?.projects.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 8 }}>
           아직 작성된 주간보고가 없습니다.
@@ -122,12 +119,12 @@ const OverallReport: React.FC<Props> = ({ weekId, title }) => {
       {summary?.projects.map((project) => {
         const isPinned = project.project_name === '휴가 및 교육';
         return (
-          <Paper key={project.project_id} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
-            <Box sx={{ bgcolor: isPinned ? '#1E40AF' : '#1E293B', px: 2.5, py: 1.5 }}>
+          <Paper key={project.project_id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
+            <Box sx={{ bgcolor: isPinned ? '#1E3A8A' : '#0F172A', px: 2.5, py: 1.5 }}>
               <Typography variant="subtitle1" fontWeight={600} color="white">{project.project_name}</Typography>
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-              <Box sx={{ p: 2.5, borderRight: '1px solid #E2E8F0' }}>
+              <Box sx={{ p: 2.5, borderRight: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   금주 업무
                 </Typography>

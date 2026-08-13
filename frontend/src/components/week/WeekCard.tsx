@@ -31,16 +31,24 @@ function parseDateRange(start: string, end: string): string {
   return `${fmt(s)} ~ ${fmt(e)}`;
 }
 
+const WEEK_PALETTE = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#6366F1'];
+const weekColor = (w: Week) => WEEK_PALETTE[(w.week_num - 1 + w.month) % WEEK_PALETTE.length];
+
 const WeekCard: React.FC<Props> = ({ week, onClick, onEdit, onDelete, isAdmin }) => {
   const dateRange = week.start_date && week.end_date
     ? parseDateRange(week.start_date, week.end_date)
     : calcDateRange(week.year, week.month, week.week_num);
+  const accent = weekColor(week);
 
   return (
-    <Card elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, position: 'relative', '&:hover': { borderColor: '#94A3B8', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' } }}>
+    <Card elevation={0} sx={{
+      border: '1px solid', borderColor: 'divider', borderRadius: 2, position: 'relative', overflow: 'hidden',
+      '&:before': { content: '""', position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, bgcolor: accent },
+      '&:hover': { borderColor: accent, boxShadow: '0 4px 12px rgba(0,0,0,0.14)' },
+    }}>
       <CardActionArea onClick={onClick} sx={{ p: 0 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>{week.title}</Typography>
+        <CardContent sx={{ pl: 2.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: accent }}>{week.title}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{dateRange}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
             <GroupIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -49,11 +57,11 @@ const WeekCard: React.FC<Props> = ({ week, onClick, onEdit, onDelete, isAdmin })
             </Typography>
           </Box>
           {week.total_members > 0 && (
-            <Box sx={{ mt: 1.5, height: 4, bgcolor: '#E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
+            <Box sx={{ mt: 1.5, height: 5, bgcolor: 'action.hover', borderRadius: 2, overflow: 'hidden' }}>
               <Box sx={{
                 height: '100%',
                 width: `${(week.done_members / week.total_members) * 100}%`,
-                bgcolor: 'primary.main',
+                bgcolor: accent,
                 borderRadius: 2,
                 transition: 'width 0.3s',
               }} />

@@ -190,7 +190,7 @@ const PersonalReport: React.FC<Props> = ({
 
       {/* 빈 상태 */}
       {canEdit && slots.length === 0 && (
-        <Box sx={{ textAlign: 'center', mt: 8, border: '2px dashed #E2E8F0', borderRadius: 2, py: 6, color: 'text.secondary' }}>
+        <Box sx={{ textAlign: 'center', mt: 8, border: '2px dashed', borderColor: 'divider', borderRadius: 2, py: 6, color: 'text.secondary' }}>
           <AddIcon sx={{ fontSize: 40, color: '#CBD5E1', mb: 1 }} />
           <Typography>오른쪽 + 버튼으로 프로젝트를 추가하세요.</Typography>
         </Box>
@@ -212,9 +212,9 @@ const PersonalReport: React.FC<Props> = ({
           });
 
         return (
-          <Paper key={slot.slotId} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
+          <Paper key={slot.slotId} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
             {/* 카드 헤더: 프로젝트 선택 */}
-            <Box sx={{ bgcolor: '#1E293B', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+            <Box sx={{ bgcolor: '#0F172A', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
               <FormControl size="small" sx={{ flex: 1 }}>
                 <Select
                   value={slot.projectId ?? ''}
@@ -249,7 +249,7 @@ const PersonalReport: React.FC<Props> = ({
             {/* 프로젝트 선택 후: 금주/차주 입력 */}
             {slot.projectId && (
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                <Box sx={{ p: 2, borderRight: '1px solid #E2E8F0' }}>
+                <Box sx={{ p: 2, borderRight: '1px solid', borderColor: 'divider' }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{dateLabels.current}</Typography>
                   <TextField
                     multiline minRows={4} fullWidth size="small"
@@ -279,12 +279,12 @@ const PersonalReport: React.FC<Props> = ({
       {!canEdit && readonlyEntries.map((e) => {
         const project = projects.find((p) => p.id === e.project_id);
         return (
-          <Paper key={e.project_id} elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
-            <Box sx={{ bgcolor: '#1E293B', px: 2.5, py: 1.5 }}>
+          <Paper key={e.project_id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
+            <Box sx={{ bgcolor: '#0F172A', px: 2.5, py: 1.5 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white' }}>{project?.name ?? ''}</Typography>
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-              <Box sx={{ p: 2, borderRight: '1px solid #E2E8F0' }}>
+              <Box sx={{ p: 2, borderRight: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{dateLabels.current}</Typography>
                 <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{e.current_work || '-'}</Typography>
               </Box>
