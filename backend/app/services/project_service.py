@@ -1,5 +1,6 @@
 from typing import List, Optional
 from fastapi import HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
@@ -40,6 +41,10 @@ def get_projects(db: Session, status_name: Optional[str] = None, user_id: Option
         q = q.filter(Project.show_in_dashboard == True)  # noqa: E712
     elif visible == "weekly":
         q = q.filter(Project.show_in_weekly == True)  # noqa: E712
+        # 완료(종료)된 프로젝트는 주간보고 작성 대상에서 제외
+        done_id = _status_id(db, STATUS_DONE)
+        if done_id is not None:
+            q = q.filter(or_(Project.status_id.is_(None), Project.status_id != done_id))
     projects = _sort_projects(db, q.all(), user_id)
     return [_to_response(db, p) for p in projects]
 
