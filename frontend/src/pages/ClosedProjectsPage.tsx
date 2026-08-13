@@ -30,7 +30,7 @@ const ClosedProjectsPage: React.FC = () => {
           <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
             <Table size="small">
               <TableHead>
-                <TableRow sx={{ bgcolor: '#F8FAFC' }}>
+                <TableRow sx={{ bgcolor: 'action.hover' }}>
                   <TableCell>코드</TableCell>
                   <TableCell>프로젝트명</TableCell>
                   <TableCell>유형</TableCell>

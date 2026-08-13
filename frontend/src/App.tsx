@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import { ThemeProvider, CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ColorModeContext } from './contexts/ColorModeContext';
+import { getTheme, type ColorMode } from './theme';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
 import WeekDetailPage from './pages/WeekDetailPage';
@@ -9,23 +11,6 @@ import SettingsPage from './pages/SettingsPage';
 import DashboardPage from './pages/DashboardPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ClosedProjectsPage from './pages/ClosedProjectsPage';
-
-const theme = createTheme({
-  palette: {
-    primary: { main: '#3B82F6' },
-    warning: { main: '#F59E0B' },
-    background: { default: '#F8FAFC' },
-  },
-  typography: {
-    fontFamily: '"Noto Sans KR", "Roboto", sans-serif',
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: { root: { textTransform: 'none', borderRadius: 8, fontWeight: 600 } },
-    },
-    MuiCard: { styleOverrides: { root: { borderRadius: 12 } } },
-  },
-});
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -59,15 +44,32 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-const App: React.FC = () => (
-  <ThemeProvider theme={theme}>
-    <CssBaseline />
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
-  </ThemeProvider>
-);
+const App: React.FC = () => {
+  const [mode, setMode] = useState<ColorMode>(
+    () => (localStorage.getItem('colorMode') as ColorMode) || 'light'
+  );
+  const colorMode = useMemo(() => ({
+    mode,
+    toggle: () => setMode((m) => {
+      const next: ColorMode = m === 'light' ? 'dark' : 'light';
+      localStorage.setItem('colorMode', next);
+      return next;
+    }),
+  }), [mode]);
+  const theme = useMemo(() => getTheme(mode), [mode]);
+
+  return (
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
+  );
+};
 
 export default App;

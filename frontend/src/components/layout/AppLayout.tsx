@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import {
   AppBar, Toolbar, Typography, Box, IconButton, Menu, MenuItem, Button,
 } from '@mui/material';
-import { AccountCircle as AccountCircleIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import {
+  AccountCircle as AccountCircleIcon, Settings as SettingsIcon,
+  DarkMode as DarkModeIcon, LightMode as LightModeIcon,
+} from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useColorMode } from '../../contexts/ColorModeContext';
 import ChangePasswordDialog from './ChangePasswordDialog';
 
 interface Props {
@@ -19,6 +23,7 @@ const NAV = [
 
 const AppLayout: React.FC<Props> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
+  const { mode, toggle } = useColorMode();
   const navigate = useNavigate();
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -28,7 +33,7 @@ const AppLayout: React.FC<Props> = ({ children }) => {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#F8FAFC' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar position="static" elevation={0} sx={{ bgcolor: '#1E293B' }}>
         <Toolbar>
           <Typography
@@ -58,6 +63,9 @@ const AppLayout: React.FC<Props> = ({ children }) => {
 
           <Box sx={{ flexGrow: 1 }} />
 
+          <IconButton color="inherit" onClick={toggle} sx={{ mr: 0.5 }} title={mode === 'dark' ? '라이트 모드' : '다크 모드'}>
+            {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
           {isAdmin && (
             <IconButton color="inherit" onClick={() => navigate('/settings')} sx={{ mr: 1 }}>
               <SettingsIcon />

@@ -78,7 +78,7 @@ const WeekDetailPage: React.FC = () => {
           flexShrink: 0,
           borderRight: '1px solid #E2E8F0',
           minHeight: 'calc(100vh - 64px)',
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
           display: 'flex',
           flexDirection: 'column',
         }}>

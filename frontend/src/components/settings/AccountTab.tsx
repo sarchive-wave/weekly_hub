@@ -60,7 +60,7 @@ const AccountTab: React.FC = () => {
       <Paper elevation={0} sx={{ border: '1px solid #E2E8F0' }}>
         <Table size="small">
           <TableHead>
-            <TableRow sx={{ bgcolor: '#F8FAFC' }}>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
               <TableCell>아이디</TableCell>
               <TableCell>이름</TableCell>
               <TableCell>직책</TableCell>

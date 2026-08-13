@@ -32,7 +32,7 @@ const PermissionTab: React.FC = () => {
       <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
         <Table size="small">
           <TableHead>
-            <TableRow sx={{ bgcolor: '#F8FAFC' }}>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
               <TableCell>권한</TableCell>
               {data.roles.map((r) => (
                 <TableCell key={r.key} align="center" sx={{ fontWeight: 600 }}>{r.label}</TableCell>

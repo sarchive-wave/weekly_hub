@@ -158,7 +158,7 @@ const ProjectDetailPage: React.FC = () => {
                 ? <Typography variant="body2" color="text.secondary">변경 이력이 없습니다.</Typography>
                 : <Table size="small">
                     <TableHead>
-                      <TableRow sx={{ bgcolor: '#F8FAFC' }}>
+                      <TableRow sx={{ bgcolor: 'action.hover' }}>
                         <TableCell>일시</TableCell><TableCell>담당</TableCell><TableCell>변경</TableCell><TableCell>이전</TableCell><TableCell>이후</TableCell>
                       </TableRow>
                     </TableHead>

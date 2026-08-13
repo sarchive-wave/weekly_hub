@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box, Typography, Paper, Grid, Chip, CircularProgress, Stack,
   ToggleButtonGroup, ToggleButton, Button, IconButton, Table, TableBody,
@@ -45,15 +45,16 @@ const MemberNames: React.FC<{ names: string[] }> = ({ names }) => {
     <Stack direction="row" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5 }}>
       {shown.map((n) => (
         <Chip key={n} label={n} size="small" variant="outlined"
-          sx={{ height: 22, fontSize: 12, bgcolor: '#F8FAFC', borderColor: '#E2E8F0' }} />
+          sx={{ height: 22, fontSize: 12, bgcolor: 'action.hover', borderColor: 'divider' }} />
       ))}
       {rest > 0 && <Chip label={`외 ${rest}`} size="small" sx={{ height: 22, fontSize: 12 }} />}
     </Stack>
   );
 };
 
+// 선명한 유형 칩 (솔리드 색)
 const TypeChip: React.FC<{ name?: string | null }> = ({ name }) =>
-  name ? <Chip label={name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: colorFor(name) + '18', color: colorFor(name), fontWeight: 600 }} /> : null;
+  name ? <Chip label={name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: colorFor(name), color: '#fff', fontWeight: 700 }} /> : null;
 
 // ── 카드 ────────────────────────────────────────────────────
 const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ item, onOpen }) => {
@@ -66,11 +67,11 @@ const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ i
       onClick={onOpen}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       sx={{
-        position: 'relative', border: '1px solid #E2E8F0', borderRadius: 3, p: 2.25, pl: 2.75,
-        height: '100%', cursor: 'pointer', overflow: 'hidden', bgcolor: 'white',
+        position: 'relative', border: '1px solid', borderColor: 'divider', borderRadius: 3, p: 2.25, pl: 2.75,
+        height: '100%', cursor: 'pointer', overflow: 'hidden', bgcolor: 'background.paper',
         opacity: isDragging ? 0.5 : 1,
         '&:before': { content: '""', position: 'absolute', left: 0, top: 0, bottom: 0, width: 5, bgcolor: accent },
-        '&:hover': { boxShadow: '0 6px 18px rgba(15,23,42,0.10)', borderColor: accent },
+        '&:hover': { boxShadow: '0 6px 18px rgba(15,23,42,0.18)', borderColor: accent },
         transition: 'box-shadow .15s, border-color .15s',
       }}
     >
@@ -78,7 +79,7 @@ const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ i
         <TypeChip name={item.type_name} />
         <IconButton size="small" {...attributes} {...listeners}
           onClick={(e) => e.stopPropagation()}
-          sx={{ cursor: 'grab', color: '#CBD5E1', '&:active': { cursor: 'grabbing' } }}>
+          sx={{ cursor: 'grab', color: 'text.disabled', '&:active': { cursor: 'grabbing' } }}>
           <DragIndicatorIcon fontSize="small" />
         </IconButton>
       </Box>
@@ -96,7 +97,7 @@ const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ i
   );
 };
 
-// ── 리스트 행 (유형 · 코드 · 명 · PM · 팀원) ─────────────────
+// ── 리스트 행 (유형 · 프로젝트(코드+명) · PM · 팀원) ─────────
 const SortableRow: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ item, onOpen }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.project_id });
   return (
@@ -105,12 +106,12 @@ const SortableRow: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ it
       hover
       onClick={onOpen}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      sx={{ cursor: 'pointer', opacity: isDragging ? 0.5 : 1, bgcolor: isDragging ? '#F1F5F9' : undefined }}
+      sx={{ cursor: 'pointer', opacity: isDragging ? 0.5 : 1, bgcolor: isDragging ? 'action.selected' : undefined }}
     >
       <TableCell sx={{ px: 0.5, width: 34 }}>
         <IconButton size="small" {...attributes} {...listeners}
           onClick={(e) => e.stopPropagation()}
-          sx={{ cursor: 'grab', color: '#CBD5E1' }}>
+          sx={{ cursor: 'grab', color: 'text.disabled' }}>
           <DragIndicatorIcon fontSize="small" />
         </IconButton>
       </TableCell>
@@ -133,6 +134,7 @@ const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [items, setItems] = useState<DashboardItem[]>([]);
   const [view, setView] = useState<'card' | 'list'>('card');
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
 
@@ -144,7 +146,13 @@ const DashboardPage: React.FC = () => {
   };
   useEffect(load, []);
 
+  const displayItems = useMemo(
+    () => (typeFilter ? items.filter((i) => i.type_name === typeFilter) : items),
+    [items, typeFilter]
+  );
+
   const handleDragEnd = (e: DragEndEvent) => {
+    if (typeFilter) return;  // 필터 중에는 순서 변경 비활성
     const { active, over } = e;
     if (!over || active.id === over.id) return;
     const oldIndex = items.findIndex((i) => i.project_id === active.id);
@@ -164,7 +172,7 @@ const DashboardPage: React.FC = () => {
           <Box>
             <Typography variant="h6" fontWeight={800}>프로젝트 대시보드</Typography>
             <Typography variant="caption" color="text.secondary">
-              진행중 {activeCount} · 전체 {data?.total ?? 0} · 드래그로 순서를 바꿀 수 있어요
+              진행중 {activeCount} · 전체 {data?.total ?? 0}{typeFilter ? ` · 필터: ${typeFilter}` : ' · 드래그로 순서를 바꿀 수 있어요'}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1.5} alignItems="center">
@@ -179,29 +187,45 @@ const DashboardPage: React.FC = () => {
           </Stack>
         </Box>
 
-        {/* 유형별 요약 */}
+        {/* 유형별 요약 = 클릭 시 필터 */}
         {data && data.by_type.length > 0 && (
           <Stack direction="row" spacing={0.75} sx={{ mb: 2.5, flexWrap: 'wrap', gap: 0.75 }}>
-            {data.by_type.map((t) => (
-              <Chip key={t.name} size="small" label={`${t.name} ${t.count}`}
-                sx={{ bgcolor: colorFor(t.name) + '18', color: colorFor(t.name), fontWeight: 600 }} />
-            ))}
+            {data.by_type.map((t) => {
+              const active = typeFilter === t.name;
+              const c = colorFor(t.name);
+              return (
+                <Chip
+                  key={t.name} size="small" label={`${t.name} ${t.count}`}
+                  onClick={() => setTypeFilter(active ? null : t.name)}
+                  sx={{
+                    cursor: 'pointer', fontWeight: 700,
+                    bgcolor: active ? c : c + '26',
+                    color: active ? '#fff' : c,
+                    border: `1px solid ${active ? c : c + '55'}`,
+                    '&:hover': { bgcolor: active ? c : c + '3A' },
+                  }}
+                />
+              );
+            })}
+            {typeFilter && (
+              <Chip size="small" label="전체 보기" variant="outlined" onClick={() => setTypeFilter(null)} sx={{ cursor: 'pointer' }} />
+            )}
           </Stack>
         )}
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}><CircularProgress /></Box>
-        ) : items.length === 0 ? (
-          <Paper elevation={0} sx={{ border: '1px dashed #CBD5E1', borderRadius: 3, py: 8, textAlign: 'center', color: 'text.secondary' }}>
-            <Typography>진행중인 프로젝트가 없습니다.</Typography>
-            {isAdmin && <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setFormOpen(true)} sx={{ mt: 2 }}>프로젝트 등록</Button>}
+        ) : displayItems.length === 0 ? (
+          <Paper elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 3, py: 8, textAlign: 'center', color: 'text.secondary' }}>
+            <Typography>{typeFilter ? `'${typeFilter}' 유형의 진행중 프로젝트가 없습니다.` : '진행중인 프로젝트가 없습니다.'}</Typography>
+            {isAdmin && !typeFilter && <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setFormOpen(true)} sx={{ mt: 2 }}>프로젝트 등록</Button>}
           </Paper>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             {view === 'card' ? (
-              <SortableContext items={items.map((i) => i.project_id)} strategy={rectSortingStrategy}>
+              <SortableContext items={displayItems.map((i) => i.project_id)} strategy={rectSortingStrategy}>
                 <Grid container spacing={2}>
-                  {items.map((item) => (
+                  {displayItems.map((item) => (
                     <Grid item xs={12} sm={6} md={4} key={item.project_id}>
                       <SortableCard item={item} onOpen={() => navigate(`/projects/${item.project_id}`)} />
                     </Grid>
@@ -209,10 +233,10 @@ const DashboardPage: React.FC = () => {
                 </Grid>
               </SortableContext>
             ) : (
-              <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+              <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, overflow: 'hidden' }}>
                 <Table size="small">
                   <TableHead>
-                    <TableRow sx={{ bgcolor: '#F8FAFC' }}>
+                    <TableRow sx={{ bgcolor: 'action.hover' }}>
                       <TableCell sx={{ px: 0.5 }} />
                       <TableCell>유형</TableCell>
                       <TableCell>프로젝트</TableCell>
@@ -221,8 +245,8 @@ const DashboardPage: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    <SortableContext items={items.map((i) => i.project_id)} strategy={verticalListSortingStrategy}>
-                      {items.map((item) => (
+                    <SortableContext items={displayItems.map((i) => i.project_id)} strategy={verticalListSortingStrategy}>
+                      {displayItems.map((item) => (
                         <SortableRow key={item.project_id} item={item} onOpen={() => navigate(`/projects/${item.project_id}`)} />
                       ))}
                     </SortableContext>
