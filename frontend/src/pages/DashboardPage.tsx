@@ -53,7 +53,7 @@ const MemberNames: React.FC<{ names: string[] }> = ({ names }) => {
 };
 
 const TypeChip: React.FC<{ name?: string | null }> = ({ name }) =>
-  name ? <Chip label={name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: colorFor(name) + '18', color: colorFor(name), fontWeight: 600 }} /> : <>-</>;
+  name ? <Chip label={name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: colorFor(name) + '18', color: colorFor(name), fontWeight: 600 }} /> : null;
 
 // ── 카드 ────────────────────────────────────────────────────
 const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ item, onOpen }) => {
