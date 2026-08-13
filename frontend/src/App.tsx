@@ -6,6 +6,10 @@ import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
 import WeekDetailPage from './pages/WeekDetailPage';
 import SettingsPage from './pages/SettingsPage';
+import DashboardPage from './pages/DashboardPage';
+import ProjectListPage from './pages/ProjectListPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import ClosedProjectsPage from './pages/ClosedProjectsPage';
 
 const theme = createTheme({
   palette: {
@@ -45,7 +49,11 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/" element={<RequireAuth><MainPage /></RequireAuth>} />
+      <Route path="/" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+      <Route path="/projects" element={<RequireAuth><ProjectListPage /></RequireAuth>} />
+      <Route path="/projects/:projectId" element={<RequireAuth><ProjectDetailPage /></RequireAuth>} />
+      <Route path="/closed" element={<RequireAuth><ClosedProjectsPage /></RequireAuth>} />
+      <Route path="/weekly" element={<RequireAuth><MainPage /></RequireAuth>} />
       <Route path="/weeks/:weekId" element={<RequireAuth><WeekDetailPage /></RequireAuth>} />
       <Route path="/settings" element={<RequireAdmin><SettingsPage /></RequireAdmin>} />
       <Route path="*" element={<Navigate to="/" replace />} />

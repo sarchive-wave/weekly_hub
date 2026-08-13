@@ -85,7 +85,7 @@ const WeekDetailPage: React.FC = () => {
           <Box sx={{ p: 2 }}>
             <Button
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/weekly')}
               size="small"
               color="inherit"
               sx={{ color: 'text.secondary' }}

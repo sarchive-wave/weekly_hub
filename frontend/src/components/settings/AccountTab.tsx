@@ -14,8 +14,8 @@ const AccountTab: React.FC = () => {
   const [editTarget, setEditTarget] = useState<User | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [resetTarget, setResetTarget] = useState<User | null>(null);
-  const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'user' });
-  const [editForm, setEditForm] = useState({ display_name: '', role: 'user', is_active: true });
+  const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'user', position: '', team: '' });
+  const [editForm, setEditForm] = useState({ display_name: '', role: 'user', is_active: true, position: '', team: '' });
   const [newPw, setNewPw] = useState('');
 
   useEffect(() => { userApi.list().then(setUsers); }, []);
@@ -25,7 +25,7 @@ const AccountTab: React.FC = () => {
       const user = await userApi.create(form);
       setUsers((prev) => [...prev, user]);
       setCreateOpen(false);
-      setForm({ username: '', password: '', display_name: '', role: 'user' });
+      setForm({ username: '', password: '', display_name: '', role: 'user', position: '', team: '' });
     } catch (e: any) { alert(e.response?.data?.detail || '생성 실패'); }
   };
 
@@ -61,6 +61,8 @@ const AccountTab: React.FC = () => {
             <TableRow sx={{ bgcolor: '#F8FAFC' }}>
               <TableCell>아이디</TableCell>
               <TableCell>이름</TableCell>
+              <TableCell>직책</TableCell>
+              <TableCell>소속</TableCell>
               <TableCell>역할</TableCell>
               <TableCell>상태</TableCell>
               <TableCell align="right">관리</TableCell>
@@ -71,6 +73,8 @@ const AccountTab: React.FC = () => {
               <TableRow key={u.id} hover>
                 <TableCell>{u.username}</TableCell>
                 <TableCell>{u.display_name}</TableCell>
+                <TableCell>{u.position || '-'}</TableCell>
+                <TableCell>{u.team || '-'}</TableCell>
                 <TableCell>
                   <Chip label={u.role === 'admin' ? '관리자' : '일반'} size="small" color={u.role === 'admin' ? 'primary' : 'default'} />
                 </TableCell>
@@ -78,7 +82,7 @@ const AccountTab: React.FC = () => {
                   <Chip label={u.is_active ? '활성' : '비활성'} size="small" color={u.is_active ? 'success' : 'default'} />
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => { setEditTarget(u); setEditForm({ display_name: u.display_name, role: u.role, is_active: u.is_active }); }}>
+                  <IconButton size="small" onClick={() => { setEditTarget(u); setEditForm({ display_name: u.display_name, role: u.role, is_active: u.is_active, position: u.position || '', team: u.team || '' }); }}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton size="small" onClick={() => setResetTarget(u)}>
@@ -102,6 +106,8 @@ const AccountTab: React.FC = () => {
             <TextField label="아이디" size="small" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} fullWidth />
             <TextField label="비밀번호" type="password" size="small" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} fullWidth />
             <TextField label="이름" size="small" value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} fullWidth />
+            <TextField label="직책" size="small" value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))} fullWidth />
+            <TextField label="소속/팀" size="small" value={form.team} onChange={(e) => setForm((f) => ({ ...f, team: e.target.value }))} fullWidth />
             <FormControl size="small" fullWidth>
               <InputLabel>역할</InputLabel>
               <Select value={form.role} label="역할" onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
@@ -123,6 +129,8 @@ const AccountTab: React.FC = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField label="이름" size="small" value={editForm.display_name} onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))} fullWidth />
+            <TextField label="직책" size="small" value={editForm.position} onChange={(e) => setEditForm((f) => ({ ...f, position: e.target.value }))} fullWidth />
+            <TextField label="소속/팀" size="small" value={editForm.team} onChange={(e) => setEditForm((f) => ({ ...f, team: e.target.value }))} fullWidth />
             <FormControl size="small" fullWidth>
               <InputLabel>역할</InputLabel>
               <Select value={editForm.role} label="역할" onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))}>
