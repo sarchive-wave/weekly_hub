@@ -1,0 +1,89 @@
+%% AI Weekly Hub — DB ERD (FigJam: 좌측 상단 + → Diagram → Mermaid 붙여넣기)
+%% 단일 PostgreSQL, 스키마 분리: common(공유) / weekly(주간회의)
+erDiagram
+  users ||--o{ project_members : "배정"
+  projects ||--o{ project_members : "구성원(PM/팀원)"
+  users ||--o{ projects : "PM(대표)"
+  project_types ||--o{ projects : "유형"
+  project_statuses ||--o{ projects : "상태"
+  projects ||--o{ project_logs : "변경이력(감사)"
+  users ||--o{ project_logs : "actor"
+  projects ||--o{ report_entries : "read 참조"
+  weeks ||--o{ reports : "주차별"
+  users ||--o{ reports : "작성자"
+  reports ||--o{ report_entries : "항목"
+
+  users {
+    int id PK
+    string username UK
+    string password_hash
+    string global_role "admin|user"
+    string display_name
+    string position "직책"
+    string team "소속/팀"
+    bool is_active
+    int sort_order
+  }
+  projects {
+    int id PK
+    string code UK "프로젝트 코드"
+    string name
+    text description "소개"
+    int type_id FK "유형"
+    int status_id FK "진행중|완료"
+    int pm_user_id FK "대표 PM"
+    date start_date "시작일"
+    date end_date "마감예정일"
+    string nas_path "NAS 공유폴더"
+    string git_url "Git 저장소"
+    datetime created_at
+    datetime updated_at
+  }
+  project_types {
+    int id PK
+    string name "PoC|본사업|연구개발"
+    int sort_order
+  }
+  project_statuses {
+    int id PK
+    string name "진행중|완료"
+    int sort_order
+  }
+  project_members {
+    int id PK
+    int project_id FK
+    int user_id FK
+    string role "pm|member"
+  }
+  project_logs {
+    int id PK
+    int project_id FK
+    int actor_user_id FK
+    string action "예: 마감일 변경"
+    string field "end_date|status_id|.."
+    string old_value
+    string new_value
+    datetime created_at
+  }
+  weeks {
+    int id PK
+    int year
+    int month
+    int week_num
+    string title
+    date start_date
+    date end_date
+  }
+  reports {
+    int id PK
+    int week_id FK
+    int user_id FK
+    string status "none|draft|done"
+  }
+  report_entries {
+    int id PK
+    int report_id FK
+    int project_id FK "common.projects 참조"
+    text current_work "금주"
+    text next_work "차주"
+  }

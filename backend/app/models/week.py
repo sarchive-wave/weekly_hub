@@ -18,4 +18,4 @@ class Week(Base):
 
     reports = relationship("Report", back_populates="week", cascade="all, delete-orphan")
 
-    __table_args__ = (UniqueConstraint("year", "month", "week_num"),)
+    __table_args__ = (UniqueConstraint("year", "month", "week_num"), {"schema": "weekly"})

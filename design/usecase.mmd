@@ -1,0 +1,45 @@
+%% AI Weekly Hub — 유스케이스 맵 (FigJam: + → Diagram → Mermaid 붙여넣기)
+%% Mermaid에는 UML 유스케이스 다이어그램이 없어 flowchart로 표현 (FigJam에서 편집 가능)
+flowchart LR
+  admin(["👤 관리자"])
+  pm(["👤 PM"])
+  member(["👤 팀원"])
+
+  subgraph DASH["대시보드 / 프로젝트"]
+    d1["전체 프로젝트 현황 조회"]
+    d2["프로젝트 상세 조회<br/>(소개·유형·기간·NAS·Git)"]
+    d3["프로젝트 주간진행 read"]
+    d4["변경이력(감사) 조회"]
+  end
+
+  subgraph PROJ["프로젝트 관리(설정)"]
+    p1["프로젝트 등록"]
+    p2["프로젝트 수정/상태·마감 변경"]
+    p3["완료 처리 → 종료 이관"]
+    p4["팀원 배정(PM/팀원)"]
+    p5["유형/상태/코드 마스터 관리"]
+  end
+
+  subgraph WEEK["주간회의"]
+    w1["본인 주간보고 작성"]
+    w2["주차 생성/삭제"]
+    w3["전체 취합 조회/미리보기"]
+  end
+
+  subgraph SYS["시스템/인력 관리(설정)"]
+    s1["인력 등록/수정(직책·소속)"]
+    s2["사용자 관리"]
+    s3["권한 관리"]
+  end
+
+  admin --> d1 & d2 & d3 & d4
+  admin --> p1 & p2 & p3 & p4 & p5
+  admin --> w1 & w2 & w3
+  admin --> s1 & s2 & s3
+
+  pm --> d1 & d2 & d3 & d4
+  pm --> p2 & p3 & p4
+  pm --> w1 & w3
+
+  member --> d1 & d2 & d3
+  member --> w1 & w3
