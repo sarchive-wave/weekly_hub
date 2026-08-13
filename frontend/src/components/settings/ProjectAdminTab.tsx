@@ -1,18 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box, Button, Paper, Table, TableHead, TableBody, TableRow, TableCell,
-  IconButton, Chip, Stack, Typography, Divider,
+  IconButton, Chip, Stack, Typography, Divider, TextField, InputAdornment, TablePagination,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
 import ProjectFormDialog from '../project/ProjectFormDialog';
 import MasterTab from './MasterTab';
 import { projectApi } from '../../api/projectApi';
 import type { Project } from '../../types';
 
+const PAGE_SIZE = 10;
+
 const ProjectAdminTab: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Project | null>(null);
+  const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(0);
 
   const load = () => { projectApi.list().then(setProjects); };
   useEffect(load, []);
@@ -26,12 +30,43 @@ const ProjectAdminTab: React.FC = () => {
     catch (e: any) { alert(e.response?.data?.detail || '삭제 실패'); }
   };
 
+  // 검색(코드·명·상태) + 완료는 맨 뒤로 정렬
+  const filtered = useMemo(() => {
+    const kw = keyword.trim().toLowerCase();
+    const matched = projects.filter((p) => {
+      if (!kw) return true;
+      return [p.code, p.name, p.status_name].some((v) => (v ?? '').toLowerCase().includes(kw));
+    });
+    return matched
+      .map((p, i) => ({ p, i }))
+      .sort((a, b) => {
+        const da = a.p.status_name === '완료' ? 1 : 0;
+        const db = b.p.status_name === '완료' ? 1 : 0;
+        return da - db || a.i - b.i;  // 완료 뒤로, 그 외 기존 순서 유지
+      })
+      .map((x) => x.p);
+  }, [projects, keyword]);
+
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const safePage = Math.min(page, Math.max(0, pageCount - 1));
+  const paged = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+
+  const onSearch = (v: string) => { setKeyword(v); setPage(0); };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
         <Typography variant="subtitle1" fontWeight={700}>프로젝트 목록</Typography>
         <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={openCreate}>프로젝트 등록</Button>
       </Box>
+
+      {/* 검색 (코드 · 명 · 상태) */}
+      <TextField
+        size="small" fullWidth placeholder="코드 · 프로젝트명 · 상태로 검색"
+        value={keyword} onChange={(e) => onSearch(e.target.value)}
+        sx={{ mb: 1.5 }}
+        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+      />
 
       <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, overflow: 'hidden' }}>
         <Table size="small">
@@ -46,7 +81,7 @@ const ProjectAdminTab: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {projects.map((p) => (
+            {paged.map((p) => (
               <TableRow key={p.id} hover>
                 <TableCell><Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled' }}>{p.code}</Typography></TableCell>
                 <TableCell><Typography variant="body2" fontWeight={600}>{p.name}</Typography></TableCell>
@@ -66,12 +101,26 @@ const ProjectAdminTab: React.FC = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {projects.length === 0 && (
-              <TableRow><TableCell colSpan={6} align="center" sx={{ color: 'text.disabled', py: 3 }}>등록된 프로젝트가 없습니다.</TableCell></TableRow>
+            {filtered.length === 0 && (
+              <TableRow><TableCell colSpan={6} align="center" sx={{ color: 'text.disabled', py: 3 }}>
+                {keyword ? '검색 결과가 없습니다.' : '등록된 프로젝트가 없습니다.'}
+              </TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </Paper>
+
+      {filtered.length > PAGE_SIZE && (
+        <TablePagination
+          component="div"
+          count={filtered.length}
+          page={safePage}
+          onPageChange={(_, p) => setPage(p)}
+          rowsPerPage={PAGE_SIZE}
+          rowsPerPageOptions={[PAGE_SIZE]}
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} / 총 ${count}`}
+        />
+      )}
 
       <Divider sx={{ my: 3 }}><Typography variant="caption" color="text.secondary">유형 · 상태 관리</Typography></Divider>
       <MasterTab />
