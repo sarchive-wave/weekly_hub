@@ -24,9 +24,6 @@ export const projectApi = {
   remove: async (id: number) => {
     await client.delete(`/api/v1/projects/${id}`);
   },
-  reorder: async (ids: number[]) => {
-    await client.put('/api/v1/projects/reorder', { ids });
-  },
   setMyOrder: async (ids: number[]) => {
     await client.put('/api/v1/projects/my-order', { ids });
   },

@@ -1,6 +1,6 @@
 # Database Specification
 
-DB의 단일 원천(single source of truth). 테이블/ERD/컬럼/인덱스/관계를 여기서만 관리한다.
+DB의 단일 원천(single source of truth). 테이블/ERD/컬럼/관계를 여기서만 관리한다.
 
 ## 개요
 
@@ -8,142 +8,108 @@ DB의 단일 원천(single source of truth). 테이블/ERD/컬럼/인덱스/관�
 |------|-----|
 | DBMS | PostgreSQL |
 | Database | `weekly_hub_db` |
-| 사용자 | `sarchive` |
-| 호스트/포트 | `localhost:5432` (네트워크 공유 시 `192.168.2.126`) |
-| 접속 URL | `postgresql://sarchive:todo1234@localhost:5432/weekly_hub_db` |
-| 사용 테이블 | `users`, `projects`, `weeks`, `reports`, `report_entries` (5개) |
+| 접속 | `postgresql://sarchive:todo1234@localhost:5432/weekly_hub_db` |
+| 스키마 | `common`(공유) / `weekly`(주간보고) / `public`(role_permissions) |
 
-> 스키마는 SQLAlchemy 모델에서 `Base.metadata.create_all(bind=engine)`로 자동 생성된다(앱 기동 시).
-> 별도 마이그레이션 도구(Alembic 등)는 없다.
+- SQLAlchemy 모델 기준 `create_all`로 신규 테이블 생성. 구조 변경은 `backend/migrations/00X_*.sql`을 **수기 실행**(Alembic 미사용). `deploy.md` 참조.
 
-### ⚠️ 미사용 테이블 — `role_permissions`
-DB에 `role_permissions` 테이블(및 데이터)이 존재하지만 **현재 코드(모델/서비스/라우터/프론트) 어디에서도 참조하지 않는다.** 제거된 권한 기능의 잔재로 추정. 드롭 여부는 별도 결정 필요(데이터 보존 상태).
+### 스키마 배치
+- **common**: `users`, `projects`, `project_types`, `project_statuses`, `project_members`, `project_logs`, `user_project_order`
+- **weekly**: `weeks`, `reports`, `report_entries` (→ common.users / common.projects FK 참조)
+- **public**: `role_permissions` (권한 설정)
 
 ---
 
-## ERD
+## ERD (요약)
 
 ```
-users (1) ───< reports >─── (1) weeks
-                  │
-                  │ (1)
-                  ▼
-             report_entries >─── (1) projects
+common.users ─┬─< common.project_members >─┬─ common.projects ─┬─ project_types
+              │                             │                  ├─ project_statuses
+              ├─< common.user_project_order>┤                  ├─ (pm_user_id → users)
+              ├─< common.project_logs >──────┘                 │
+              └─< weekly.reports >── weekly.weeks               │
+                     └─< weekly.report_entries >────────────────┘
 ```
-- `reports` : (week, user) 조합당 1건 (UNIQUE)
-- `report_entries` : (report, project) 조합당 1건 (UNIQUE)
-- 모든 하위 관계는 **ON DELETE CASCADE**:
-  주차 삭제 → 보고 삭제 → 엔트리 삭제 / 사용자 삭제 → 보고 삭제 / 프로젝트 삭제 → 엔트리 삭제
+- 모든 하위 관계 ON DELETE CASCADE. 프로젝트 삭제 → members/logs/order/report_entries 정리.
 
 ---
 
-## users
+## common.users
+계정 + 전역역할 + 직책/소속.
 
-| 컬럼 | 타입 | NULL | 기본값 | 비고 |
-|------|------|------|--------|------|
-| id | integer | NOT NULL | seq | PK |
-| username | varchar(50) | NOT NULL | | **UNIQUE** |
-| password_hash | varchar(255) | NOT NULL | | bcrypt 해시 |
-| role | varchar(10) | NOT NULL | `'user'` | `admin` / `user` |
-| display_name | varchar(50) | NOT NULL | | 표시 이름 |
-| is_active | boolean | NOT NULL | `true` | 비활성 시 로그인/집계 제외 |
-| sort_order | integer | NULL | `999` | 목록 정렬 |
-| created_at | timestamp | NULL | `now()` | |
-| updated_at | timestamp | NULL | `now()` | onupdate 갱신 |
+| 컬럼 | 타입 | 비고 |
+|------|------|------|
+| id | int PK | |
+| username | varchar(50) UNIQUE | 로그인 아이디 |
+| password_hash | varchar(255) | bcrypt |
+| role | varchar(10) | 전역역할 `admin`/`user` |
+| display_name | varchar(50) | 표시 이름 |
+| position | varchar(50) | 직책(센터장/팀장/차장/과장/대리) |
+| team | varchar(50) | 소속/팀 |
+| is_active | bool | 비활성 시 로그인·집계 제외(퇴사자 처리) |
+| sort_order | int | (표시는 직책순→가나다 규칙 우선, `function.md`) |
+| created_at / updated_at | timestamp | |
 
-인덱스: `users_pkey`(id), `users_username_key` UNIQUE(username)
+## common.projects
 
----
+| 컬럼 | 타입 | 비고 |
+|------|------|------|
+| id | int PK | |
+| code | varchar(50) UNIQUE | 프로젝트 코드(영문 약칭 등) |
+| name | varchar(100) UNIQUE | 프로젝트명 |
+| full_name | varchar(200) | 정식 명칭(목록 미노출) |
+| description | text | 소개 |
+| type_id | int FK → project_types | 유형 |
+| status_id | int FK → project_statuses | 상태 |
+| pm_user_id | int FK → users | 대표 PM |
+| start_date / end_date | date | 시작/마감예정 |
+| nas_path | varchar(300) | NAS 공유폴더 |
+| git_url | varchar(300) | Git 저장소 |
+| show_in_dashboard | bool | 대시보드 노출 |
+| show_in_weekly | bool | 주간보고 노출 |
+| sort_order | int | (개인 순서는 user_project_order) |
+| created_at / updated_at | timestamp | |
 
-## projects
+## common.project_types / project_statuses (마스터)
+`id, name(UNIQUE), sort_order`
+- types 시드: PoC / 본사업 / 연구개발 / 기획 / 기타
+- statuses 시드: 진행중 / 완료
 
-| 컬럼 | 타입 | NULL | 기본값 | 비고 |
-|------|------|------|--------|------|
-| id | integer | NOT NULL | seq | PK |
-| name | varchar(100) | NOT NULL | | **UNIQUE** |
-| sort_order | integer | NULL | `999` | 목록/보고 정렬 |
-| created_at | timestamp | NULL | `now()` | |
+## common.project_members
+프로젝트별 인력 배정. `id, project_id FK, user_id FK, role(pm|member)`, UNIQUE(project_id, user_id)
 
-인덱스: `projects_pkey`(id), `projects_name_key` UNIQUE(name)
+## common.project_logs (감사)
+`id, project_id FK, actor_user_id FK, action, field, old_value, new_value, created_at`
+- 마감일/상태/PM/팀원/필드 변경 기록.
 
----
+## common.user_project_order (개인화)
+사용자별 대시보드 표시 순서. `id, user_id FK, project_id FK, sort_order`, UNIQUE(user_id, project_id)
+- 없으면 가나다(이름) 기본 정렬.
 
-## weeks
-
-| 컬럼 | 타입 | NULL | 기본값 | 비고 |
-|------|------|------|--------|------|
-| id | integer | NOT NULL | seq | PK |
-| year | integer | NOT NULL | | |
-| month | integer | NOT NULL | | |
-| week_num | integer | NOT NULL | | 월 내 주차 번호 |
-| title | varchar(50) | NOT NULL | | 예: "8월 2주차" |
-| start_date | date | NULL | | 주차 시작(월) |
-| end_date | date | NULL | | 주차 종료(금) |
-| created_at | timestamp | NULL | `now()` | |
-
-인덱스: `weeks_pkey`(id), `weeks_year_month_week_num_key` UNIQUE(year, month, week_num)
-
----
-
-## reports
-
-| 컬럼 | 타입 | NULL | 기본값 | 비고 |
-|------|------|------|--------|------|
-| id | integer | NOT NULL | seq | PK |
-| week_id | integer | NOT NULL | | FK → weeks(id) CASCADE |
-| user_id | integer | NOT NULL | | FK → users(id) CASCADE |
-| status | varchar(10) | NOT NULL | `'none'` | `none` / `draft` / `done` |
-| updated_at | timestamp | NULL | `now()` | onupdate 갱신 |
-
-인덱스: `reports_pkey`(id), `reports_week_id_user_id_key` UNIQUE(week_id, user_id)
-
-> 상태 흐름: 저장 시 `draft`, 작성완료 토글 시 `done`, 해제 시 `none`. 보고가 없으면 조회는 `none`+빈 목록 반환.
+## public.role_permissions
+역할별 권한 설정(시스템 관리). `id, role, permission, enabled`, UNIQUE(role, permission)
+- 카탈로그(role: admin/pm/member, permission: project.create/edit/delete/member, week.manage, meta.manage, account.manage)는 코드(`permission_service`)에 정의, 저장은 이 테이블.
 
 ---
 
-## report_entries
+## weekly.weeks / reports / report_entries
 
-| 컬럼 | 타입 | NULL | 기본값 | 비고 |
-|------|------|------|--------|------|
-| id | integer | NOT NULL | seq | PK |
-| report_id | integer | NOT NULL | | FK → reports(id) CASCADE |
-| project_id | integer | NOT NULL | | FK → projects(id) CASCADE |
-| current_work | text | NULL | `''` | 금주 업무 |
-| next_work | text | NULL | `''` | 차주 업무 |
+- **weeks**: `id, year, month, week_num, title, start_date, end_date, created_at`, UNIQUE(year,month,week_num)
+- **reports**: `id, week_id FK, user_id FK(common.users), status(none/draft/done), updated_at`, UNIQUE(week_id,user_id)
+- **report_entries**: `id, report_id FK, project_id FK(common.projects), current_work text, next_work text`, UNIQUE(report_id,project_id)
 
-인덱스: `report_entries_pkey`(id), `report_entries_report_id_project_id_key` UNIQUE(report_id, project_id)
-
-> 저장 시 해당 report의 기존 엔트리를 전부 삭제 후 재삽입한다(전체 교체 방식, `function.md` 참조).
+> 저장 시 해당 report의 기존 엔트리를 전부 삭제 후 재삽입(전체 교체). `function.md` 참조.
 
 ---
 
-## 초기 데이터 (seed)
+## 초기 데이터 (seed / 마이그레이션)
+- `seed.py`: admin 계정(`admin`/`admin1234`, role=admin) — admin 역할 없을 때만.
+- 마스터(types/statuses)는 마이그레이션 001/004에서 시드.
 
-`seed.py` — admin 역할 사용자가 하나도 없을 때만 아래 계정을 생성:
-
-| username | password | role | display_name |
-|----------|----------|------|--------------|
-| admin | admin1234 (해시 저장) | admin | 관리자 |
-
-projects/weeks/reports는 seed 없음(운영 중 생성).
-
----
-
-## 참고 쿼리
-
-```sql
--- 주차별 작성완료 인원
-SELECT w.title, count(*) FILTER (WHERE r.status='done') AS done, count(u.*) AS total
-FROM weeks w
-CROSS JOIN users u
-LEFT JOIN reports r ON r.week_id=w.id AND r.user_id=u.id
-WHERE u.is_active
-GROUP BY w.id ORDER BY w.year DESC, w.month DESC, w.week_num;
-
--- 특정 주차 취합 (프로젝트별 엔트리)
-SELECT p.name, e.current_work, e.next_work
-FROM report_entries e
-JOIN reports r ON r.id=e.report_id
-JOIN projects p ON p.id=e.project_id
-WHERE r.week_id = :week_id;
-```
+## 마이그레이션 이력
+| 파일 | 내용 |
+|------|------|
+| 001_schemas.sql | public→common/weekly 분리, 신규 테이블·시드·백필 |
+| 002_user_project_order.sql | 개인 순서 테이블 |
+| 003_project_visibility.sql | show_in_dashboard/weekly |
+| 004_project_fullname_types.sql | full_name 컬럼 + 유형 기획/기타 |

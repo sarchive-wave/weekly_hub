@@ -196,12 +196,6 @@ def delete_project(db: Session, project_id: int) -> None:
     db.commit()
 
 
-def reorder_projects(db: Session, ids: List[int]) -> None:
-    for order, pid in enumerate(ids, start=1):
-        db.query(Project).filter(Project.id == pid).update({"sort_order": order})
-    db.commit()
-
-
 # ── 구성원 ──────────────────────────────────────────────────
 def get_members(db: Session, project_id: int) -> List[ProjectMemberResponse]:
     _find(db, project_id)
