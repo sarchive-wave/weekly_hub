@@ -8,12 +8,16 @@ class UserCreateRequest(BaseModel):
     password: str
     display_name: str
     role: str = "user"
+    position: Optional[str] = None
+    team: Optional[str] = None
 
 
 class UserUpdateRequest(BaseModel):
     display_name: str
     role: str
     is_active: bool
+    position: Optional[str] = None
+    team: Optional[str] = None
 
 
 class ResetPasswordRequest(BaseModel):
@@ -29,6 +33,8 @@ class UserResponse(BaseModel):
     username: str
     display_name: str
     role: str
+    position: Optional[str] = None
+    team: Optional[str] = None
     is_active: bool
     sort_order: Optional[int]
     created_at: datetime

@@ -4,7 +4,7 @@ from app.config import CORS_ORIGINS
 from app.database import engine
 from app import models
 from app.database import Base
-from app.routers import auth, users, projects, weeks, reports
+from app.routers import auth, users, projects, weeks, reports, project_meta, dashboard
 from app import seed
 
 Base.metadata.create_all(bind=engine)
@@ -25,6 +25,8 @@ app.include_router(users.router, prefix="/api/v1/users")
 app.include_router(projects.router, prefix="/api/v1/projects")
 app.include_router(weeks.router, prefix="/api/v1/weeks")
 app.include_router(reports.router, prefix="/api/v1/reports")
+app.include_router(project_meta.router, prefix="/api/v1/project-meta")
+app.include_router(dashboard.router, prefix="/api/v1/dashboard")
 
 
 @app.get("/")

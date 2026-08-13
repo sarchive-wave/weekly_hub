@@ -21,6 +21,8 @@ def create_user(db: Session, req: UserCreateRequest) -> UserResponse:
         password_hash=hash_password(req.password),
         display_name=req.display_name,
         role=req.role,
+        position=req.position,
+        team=req.team,
     )
     db.add(user)
     db.commit()
@@ -35,6 +37,8 @@ def update_user(db: Session, user_id: int, req: UserUpdateRequest) -> UserRespon
     user.display_name = req.display_name
     user.role = req.role
     user.is_active = req.is_active
+    user.position = req.position
+    user.team = req.team
     db.commit()
     db.refresh(user)
     return UserResponse.model_validate(user)
