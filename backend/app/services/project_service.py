@@ -21,6 +21,13 @@ from app.services import project_log_service
 STATUS_ACTIVE = "진행중"
 STATUS_DONE = "완료"
 
+# 직책 표시 순서 (센터장 → 대리), 미지정은 뒤로
+POSITION_ORDER = {"센터장": 1, "팀장": 2, "차장": 3, "과장": 4, "대리": 5}
+
+
+def _pos_rank(position) -> int:
+    return POSITION_ORDER.get(position or "", 99)
+
 # 감사 로그용 필드 라벨
 FIELD_LABELS = {
     "name": "프로젝트명", "code": "코드", "description": "소개",
@@ -301,9 +308,9 @@ def _member_users(db: Session, project_id: int) -> List[User]:
         db.query(User)
         .join(ProjectMember, ProjectMember.user_id == User.id)
         .filter(ProjectMember.project_id == project_id)
-        .order_by(User.sort_order.asc(), User.id.asc())
         .all()
     )
+    rows.sort(key=lambda u: (_pos_rank(u.position), u.sort_order or 999, u.id))
     return rows
 
 
@@ -312,9 +319,9 @@ def _member_responses(db: Session, project_id: int) -> List[ProjectMemberRespons
         db.query(ProjectMember, User)
         .join(User, User.id == ProjectMember.user_id)
         .filter(ProjectMember.project_id == project_id)
-        .order_by(User.sort_order.asc(), User.id.asc())
         .all()
     )
+    rows.sort(key=lambda mu: (_pos_rank(mu[1].position), mu[1].sort_order or 999, mu[1].id))
     return [
         ProjectMemberResponse(
             user_id=u.id, display_name=u.display_name,

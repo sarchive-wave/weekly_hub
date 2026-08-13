@@ -3,8 +3,9 @@ import {
   Box, Button, Paper, Table, TableHead, TableBody, TableRow, TableCell,
   IconButton, Chip, Stack, Typography, Divider, TextField, InputAdornment, TablePagination,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Group as GroupIcon } from '@mui/icons-material';
 import ProjectFormDialog from '../project/ProjectFormDialog';
+import MembersDialog from '../project/MembersDialog';
 import MasterTab from './MasterTab';
 import { projectApi } from '../../api/projectApi';
 import type { Project } from '../../types';
@@ -15,6 +16,7 @@ const ProjectAdminTab: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Project | null>(null);
+  const [membersTarget, setMembersTarget] = useState<Project | null>(null);
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(0);
 
@@ -96,8 +98,9 @@ const ProjectAdminTab: React.FC = () => {
                   </Stack>
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => openEdit(p)}><EditIcon fontSize="small" /></IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(p)}><DeleteIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" title="팀원 배정" onClick={() => setMembersTarget(p)}><GroupIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" title="수정" onClick={() => openEdit(p)}><EditIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" color="error" title="삭제" onClick={() => handleDelete(p)}><DeleteIcon fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -130,6 +133,13 @@ const ProjectAdminTab: React.FC = () => {
         initial={editTarget}
         onClose={() => setFormOpen(false)}
         onSaved={() => load()}
+      />
+
+      <MembersDialog
+        open={!!membersTarget}
+        projectId={membersTarget?.id ?? 0}
+        onClose={() => setMembersTarget(null)}
+        onSaved={() => { setMembersTarget(null); load(); }}
       />
     </Box>
   );

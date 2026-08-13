@@ -8,6 +8,8 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, LockReset as Lo
 import { userApi } from '../../api/userApi';
 import type { User } from '../../types';
 
+const POSITIONS = ['센터장', '팀장', '차장', '과장', '대리'];
+
 const AccountTab: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -106,7 +108,13 @@ const AccountTab: React.FC = () => {
             <TextField label="아이디" size="small" value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} fullWidth />
             <TextField label="비밀번호" type="password" size="small" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} fullWidth />
             <TextField label="이름" size="small" value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} fullWidth />
-            <TextField label="직책" size="small" value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))} fullWidth />
+            <FormControl size="small" fullWidth>
+              <InputLabel>직책</InputLabel>
+              <Select value={form.position} label="직책" onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))}>
+                <MenuItem value="">미지정</MenuItem>
+                {POSITIONS.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+              </Select>
+            </FormControl>
             <TextField label="소속/팀" size="small" value={form.team} onChange={(e) => setForm((f) => ({ ...f, team: e.target.value }))} fullWidth />
             <FormControl size="small" fullWidth>
               <InputLabel>역할</InputLabel>
@@ -129,7 +137,13 @@ const AccountTab: React.FC = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField label="이름" size="small" value={editForm.display_name} onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))} fullWidth />
-            <TextField label="직책" size="small" value={editForm.position} onChange={(e) => setEditForm((f) => ({ ...f, position: e.target.value }))} fullWidth />
+            <FormControl size="small" fullWidth>
+              <InputLabel>직책</InputLabel>
+              <Select value={editForm.position} label="직책" onChange={(e) => setEditForm((f) => ({ ...f, position: e.target.value }))}>
+                <MenuItem value="">미지정</MenuItem>
+                {POSITIONS.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+              </Select>
+            </FormControl>
             <TextField label="소속/팀" size="small" value={editForm.team} onChange={(e) => setEditForm((f) => ({ ...f, team: e.target.value }))} fullWidth />
             <FormControl size="small" fullWidth>
               <InputLabel>역할</InputLabel>
