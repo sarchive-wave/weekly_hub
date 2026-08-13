@@ -14,7 +14,7 @@ const ClosedProjectsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    projectApi.list('완료').then(setProjects).finally(() => setLoading(false));
+    projectApi.list('완료', 'dashboard').then(setProjects).finally(() => setLoading(false));
   }, []);
 
   return (

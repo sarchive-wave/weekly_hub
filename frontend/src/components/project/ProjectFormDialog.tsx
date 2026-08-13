@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Box,
-  TextField, Select, MenuItem, FormControl, InputLabel,
+  TextField, Select, MenuItem, FormControl, InputLabel, FormControlLabel,
+  Checkbox, Divider, Typography,
 } from '@mui/material';
 import { projectApi } from '../../api/projectApi';
 import { metaApi } from '../../api/metaApi';
@@ -24,7 +25,12 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
   const [form, setForm] = useState<ProjectPayload>(empty);
   const [types, setTypes] = useState<ProjectMeta[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [showDashboard, setShowDashboard] = useState(true);
+  const [showWeekly, setShowWeekly] = useState(true);
+  const [closed, setClosed] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const wasDone = initial?.status_name === '완료';
 
   useEffect(() => {
     if (!open) return;
@@ -37,8 +43,14 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
         start_date: initial.start_date ?? null, end_date: initial.end_date ?? null,
         nas_path: initial.nas_path ?? '', git_url: initial.git_url ?? '',
       });
+      setShowDashboard(initial.show_in_dashboard ?? true);
+      setShowWeekly(initial.show_in_weekly ?? true);
+      setClosed(initial.status_name === '완료');
     } else {
       setForm(empty);
+      setShowDashboard(true);
+      setShowWeekly(true);
+      setClosed(false);
     }
   }, [open, initial]);
 
@@ -46,6 +58,17 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
 
   const handleSave = async () => {
     if (!form.name.trim()) { alert('프로젝트명을 입력하세요.'); return; }
+
+    // 수정 시 반드시 확인창
+    if (initial) {
+      const msg = (closed && !wasDone)
+        ? '이 프로젝트를 종료(완료) 처리하고 저장합니다. 계속하시겠습니까?'
+        : (!closed && wasDone)
+          ? '종료를 해제하고(진행중으로) 저장합니다. 계속하시겠습니까?'
+          : '수정 내용을 저장하시겠습니까?';
+      if (!window.confirm(msg)) return;
+    }
+
     setSaving(true);
     try {
       const payload: ProjectPayload = {
@@ -53,10 +76,18 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
         code: form.code || undefined,
         start_date: form.start_date || null,
         end_date: form.end_date || null,
+        show_in_dashboard: showDashboard,
+        show_in_weekly: showWeekly,
       };
-      const saved = initial
-        ? await projectApi.update(initial.id, payload)
-        : await projectApi.create(payload);
+      let saved: Project;
+      if (initial) {
+        saved = await projectApi.update(initial.id, payload);
+        // 종료 토글 반영 (상태는 완료/재개 액션으로 처리)
+        if (closed && !wasDone) saved = await projectApi.complete(initial.id);
+        else if (!closed && wasDone) saved = await projectApi.reopen(initial.id);
+      } else {
+        saved = await projectApi.create(payload);
+      }
       onSaved(saved);
       onClose();
     } catch (e: any) {
@@ -93,6 +124,22 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
           <TextField label="Git 저장소" size="small" value={form.git_url ?? ''} onChange={(e) => set('git_url', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
           <TextField label="소개" size="small" multiline minRows={2} value={form.description ?? ''} onChange={(e) => set('description', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
         </Box>
+
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>메뉴 노출</Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControlLabel control={<Checkbox size="small" checked={showDashboard} onChange={(e) => setShowDashboard(e.target.checked)} />} label="대시보드" />
+          <FormControlLabel control={<Checkbox size="small" checked={showWeekly} onChange={(e) => setShowWeekly(e.target.checked)} />} label="주간회의" />
+        </Box>
+
+        {initial && (
+          <Box sx={{ mt: 1 }}>
+            <FormControlLabel
+              control={<Checkbox size="small" color="warning" checked={closed} onChange={(e) => setClosed(e.target.checked)} />}
+              label={<Typography variant="body2">종료 (완료 처리 → 종료 메뉴로 이동)</Typography>}
+            />
+          </Box>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">취소</Button>

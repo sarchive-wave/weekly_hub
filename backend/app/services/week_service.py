@@ -64,7 +64,7 @@ def get_summary(db: Session, week_id: int) -> OverallSummaryResponse:
     PINNED_LAST = "휴가 및 교육"
 
     week = _find(db, week_id)
-    projects = db.query(Project).all()
+    projects = db.query(Project).filter(Project.show_in_weekly == True).all()  # noqa: E712
     projects.sort(key=lambda p: (
         p.name == PINNED_LAST,
         not bool(re.match(r'^[A-Za-z]', p.name)),

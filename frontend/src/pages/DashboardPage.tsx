@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Typography, Paper, Grid, Chip, CircularProgress, Stack,
   ToggleButtonGroup, ToggleButton, Button, IconButton, Table, TableBody,
-  TableHead, TableRow, TableCell, Tooltip, Avatar,
+  TableHead, TableRow, TableCell, Tooltip,
 } from '@mui/material';
 import {
   ViewModule as ViewModuleIcon, ViewList as ViewListIcon, Add as AddIcon,
-  DragIndicator as DragIndicatorIcon, Event as EventIcon,
+  DragIndicator as DragIndicatorIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -30,12 +30,6 @@ const colorFor = (s?: string | null) => {
   return PALETTE[sum % PALETTE.length];
 };
 
-const daysLeft = (end?: string | null) => {
-  if (!end) return null;
-  const d = Math.ceil((new Date(end + 'T00:00:00').getTime() - Date.now()) / 86400000);
-  return d;
-};
-
 // 팀원 이름 칩 (최대 4명 + 외 N)
 const MemberNames: React.FC<{ names: string[] }> = ({ names }) => {
   if (names.length === 0) return <Typography variant="body2" color="text.disabled">-</Typography>;
@@ -52,19 +46,8 @@ const MemberNames: React.FC<{ names: string[] }> = ({ names }) => {
   );
 };
 
-const DueChip: React.FC<{ end?: string | null }> = ({ end }) => {
-  const d = daysLeft(end);
-  if (d === null) return <Typography variant="body2" color="text.disabled">마감 미정</Typography>;
-  const color = d < 0 ? 'error' : d <= 14 ? 'warning' : 'default';
-  const label = d < 0 ? `${-d}일 지남` : d === 0 ? '오늘 마감' : `D-${d}`;
-  return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
-      <EventIcon sx={{ fontSize: 15, color: 'text.disabled' }} />
-      <Typography variant="body2" color="text.secondary">{end}</Typography>
-      <Chip label={label} size="small" color={color as any} sx={{ height: 18, fontSize: 11 }} />
-    </Stack>
-  );
-};
+const TypeChip: React.FC<{ name?: string | null }> = ({ name }) =>
+  name ? <Chip label={name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: colorFor(name) + '18', color: colorFor(name), fontWeight: 600 }} /> : <>-</>;
 
 // ── 카드 ────────────────────────────────────────────────────
 const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ item, onOpen }) => {
@@ -86,38 +69,31 @@ const SortableCard: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ i
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled' }}>{item.code}</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {item.type_name && <Chip label={item.type_name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: accent + '18', color: accent, fontWeight: 600 }} />}
-          <IconButton size="small" {...attributes} {...listeners}
-            onClick={(e) => e.stopPropagation()}
-            sx={{ cursor: 'grab', color: '#CBD5E1', '&:active': { cursor: 'grabbing' } }}>
-            <DragIndicatorIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <Stack direction="row" spacing={0.75} alignItems="center">
+          <TypeChip name={item.type_name} />
+          <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled' }}>{item.code}</Typography>
+        </Stack>
+        <IconButton size="small" {...attributes} {...listeners}
+          onClick={(e) => e.stopPropagation()}
+          sx={{ cursor: 'grab', color: '#CBD5E1', '&:active': { cursor: 'grabbing' } }}>
+          <DragIndicatorIcon fontSize="small" />
+        </IconButton>
       </Box>
       <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.25, lineHeight: 1.3 }}>{item.name}</Typography>
-      <Stack spacing={0.9}>
-        <Stack direction="row" spacing={0.75} alignItems="center">
-          <Avatar sx={{ width: 22, height: 22, fontSize: 12, bgcolor: accent }}>
-            {(item.pm_name || '·').slice(0, 1)}
-          </Avatar>
-          <Typography variant="body2" color="text.secondary">PM · {item.pm_name ?? '미지정'}</Typography>
-        </Stack>
+      <Stack spacing={1}>
+        <Typography variant="body2" sx={{ color: 'text.primary' }}>PM · {item.pm_name ?? '미지정'}</Typography>
         <Box>
           <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 0.4 }}>팀원</Typography>
           <MemberNames names={item.member_names} />
         </Box>
-        <DueChip end={item.end_date} />
       </Stack>
     </Paper>
   );
 };
 
-// ── 리스트 행 ───────────────────────────────────────────────
+// ── 리스트 행 (유형 · 코드 · 명 · PM · 팀원) ─────────────────
 const SortableRow: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ item, onOpen }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.project_id });
-  const accent = colorFor(item.type_name);
   return (
     <TableRow
       ref={setNodeRef}
@@ -133,17 +109,11 @@ const SortableRow: React.FC<{ item: DashboardItem; onOpen: () => void }> = ({ it
           <DragIndicatorIcon fontSize="small" />
         </IconButton>
       </TableCell>
+      <TableCell><TypeChip name={item.type_name} /></TableCell>
       <TableCell><Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled' }}>{item.code}</Typography></TableCell>
-      <TableCell>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: accent, flexShrink: 0 }} />
-          <Typography variant="body2" fontWeight={600}>{item.name}</Typography>
-        </Stack>
-      </TableCell>
-      <TableCell>{item.type_name ? <Chip label={item.type_name} size="small" sx={{ height: 20, fontSize: 11, bgcolor: accent + '18', color: accent, fontWeight: 600 }} /> : '-'}</TableCell>
-      <TableCell><Typography variant="body2" color="text.secondary">{item.pm_name ?? '미지정'}</Typography></TableCell>
-      <TableCell sx={{ maxWidth: 260 }}><MemberNames names={item.member_names} /></TableCell>
-      <TableCell><DueChip end={item.end_date} /></TableCell>
+      <TableCell><Typography variant="body2" fontWeight={600}>{item.name}</Typography></TableCell>
+      <TableCell><Typography variant="body2">{item.pm_name ?? '미지정'}</Typography></TableCell>
+      <TableCell sx={{ maxWidth: 300 }}><MemberNames names={item.member_names} /></TableCell>
     </TableRow>
   );
 };
@@ -176,7 +146,6 @@ const DashboardPage: React.FC = () => {
   };
 
   const activeCount = data?.by_status.find((s) => s.name === '진행중')?.count ?? 0;
-  const doneCount = data?.by_status.find((s) => s.name === '완료')?.count ?? 0;
 
   return (
     <AppLayout>
@@ -186,14 +155,11 @@ const DashboardPage: React.FC = () => {
           <Box>
             <Typography variant="h6" fontWeight={800}>프로젝트 대시보드</Typography>
             <Typography variant="caption" color="text.secondary">
-              진행중 {activeCount} · 완료 {doneCount} · 전체 {data?.total ?? 0} · 드래그로 순서를 바꿀 수 있어요
+              진행중 {activeCount} · 전체 {data?.total ?? 0} · 드래그로 순서를 바꿀 수 있어요
             </Typography>
           </Box>
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <ToggleButtonGroup
-              size="small" exclusive value={view}
-              onChange={(_, v) => v && setView(v)}
-            >
+            <ToggleButtonGroup size="small" exclusive value={view} onChange={(_, v) => v && setView(v)}>
               <ToggleButton value="card" sx={{ px: 1.2 }}><Tooltip title="카드"><ViewModuleIcon fontSize="small" /></Tooltip></ToggleButton>
               <ToggleButton value="list" sx={{ px: 1.2 }}><Tooltip title="리스트"><ViewListIcon fontSize="small" /></Tooltip></ToggleButton>
             </ToggleButtonGroup>
@@ -238,12 +204,11 @@ const DashboardPage: React.FC = () => {
                   <TableHead>
                     <TableRow sx={{ bgcolor: '#F8FAFC' }}>
                       <TableCell sx={{ px: 0.5 }} />
+                      <TableCell>유형</TableCell>
                       <TableCell>코드</TableCell>
                       <TableCell>프로젝트명</TableCell>
-                      <TableCell>유형</TableCell>
                       <TableCell>PM</TableCell>
                       <TableCell>팀원</TableCell>
-                      <TableCell>마감</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

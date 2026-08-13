@@ -15,6 +15,8 @@ class ProjectCreateRequest(BaseModel):
     end_date: Optional[date] = None
     nas_path: Optional[str] = None
     git_url: Optional[str] = None
+    show_in_dashboard: Optional[bool] = True
+    show_in_weekly: Optional[bool] = True
 
 
 class ProjectUpdateRequest(BaseModel):
@@ -28,6 +30,8 @@ class ProjectUpdateRequest(BaseModel):
     end_date: Optional[date] = None
     nas_path: Optional[str] = None
     git_url: Optional[str] = None
+    show_in_dashboard: Optional[bool] = None
+    show_in_weekly: Optional[bool] = None
 
 
 class ProjectReorderRequest(BaseModel):
@@ -66,6 +70,8 @@ class ProjectResponse(BaseModel):
     end_date: Optional[date] = None
     nas_path: Optional[str] = None
     git_url: Optional[str] = None
+    show_in_dashboard: bool = True
+    show_in_weekly: bool = True
     sort_order: Optional[int] = None
     member_count: int = 0
     members: List[ProjectMemberResponse] = []

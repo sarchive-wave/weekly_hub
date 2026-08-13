@@ -33,6 +33,8 @@ export interface Project {
   end_date?: string | null;
   nas_path?: string | null;
   git_url?: string | null;
+  show_in_dashboard?: boolean;
+  show_in_weekly?: boolean;
   sort_order?: number | null;
   member_count?: number;
   members?: ProjectMember[];
@@ -102,6 +104,8 @@ export interface ProjectPayload {
   end_date?: string | null;
   nas_path?: string | null;
   git_url?: string | null;
+  show_in_dashboard?: boolean;
+  show_in_weekly?: boolean;
 }
 
 export interface Week {

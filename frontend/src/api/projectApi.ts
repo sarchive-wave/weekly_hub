@@ -2,8 +2,11 @@ import client from './client';
 import type { Project, ProjectMember, ProjectLog, ProjectWeeklyItem, ProjectPayload } from '../types';
 
 export const projectApi = {
-  list: async (status?: string) => {
-    const res = await client.get('/api/v1/projects', { params: status ? { status } : {} });
+  list: async (status?: string, visible?: string) => {
+    const params: Record<string, string> = {};
+    if (status) params.status = status;
+    if (visible) params.visible = visible;
+    const res = await client.get('/api/v1/projects', { params });
     return res.data as Project[];
   },
   get: async (id: number) => {

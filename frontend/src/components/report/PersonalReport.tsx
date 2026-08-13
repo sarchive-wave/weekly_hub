@@ -78,7 +78,7 @@ const PersonalReport: React.FC<Props> = ({
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [rep, projs] = await Promise.all([reportApi.get(weekId, userId), projectApi.list()]);
+    const [rep, projs] = await Promise.all([reportApi.get(weekId, userId), projectApi.list(undefined, 'weekly')]);
     setReport(rep);
     setProjects(projs);
     const map: Record<number, { current: string; next: string }> = {};

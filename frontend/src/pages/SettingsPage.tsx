@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Tab, Tabs, Paper } from '@mui/material';
 import AppLayout from '../components/layout/AppLayout';
 import AccountTab from '../components/settings/AccountTab';
-import MasterTab from '../components/settings/MasterTab';
+import ProjectAdminTab from '../components/settings/ProjectAdminTab';
 
 const SettingsPage: React.FC = () => {
   const [tab, setTab] = useState(0);
@@ -18,7 +18,7 @@ const SettingsPage: React.FC = () => {
             <Tab label="시스템 관리" />
           </Tabs>
           <Box sx={{ p: 3 }}>
-            {tab === 0 && <MasterTab />}
+            {tab === 0 && <ProjectAdminTab />}
             {tab === 1 && <AccountTab />}
             {tab === 2 && (
               <Box sx={{ color: 'text.secondary' }}>

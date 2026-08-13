@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -19,6 +19,8 @@ class Project(Base):
     end_date = Column(Date)                          # 마감예정일
     nas_path = Column(String(300))                   # NAS 공유폴더
     git_url = Column(String(300))                    # Git 저장소
+    show_in_dashboard = Column(Boolean, nullable=False, default=True)  # 대시보드 노출
+    show_in_weekly = Column(Boolean, nullable=False, default=True)     # 주간회의 노출
     sort_order = Column(Integer, default=999)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

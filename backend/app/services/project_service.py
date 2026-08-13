@@ -26,14 +26,20 @@ FIELD_LABELS = {
     "type_id": "유형", "status_id": "상태", "pm_user_id": "PM",
     "start_date": "시작일", "end_date": "마감예정일",
     "nas_path": "NAS 경로", "git_url": "Git 저장소",
+    "show_in_dashboard": "대시보드 노출", "show_in_weekly": "주간회의 노출",
 }
 
 
 # ── 조회 ────────────────────────────────────────────────────
-def get_projects(db: Session, status_name: Optional[str] = None, user_id: Optional[int] = None) -> List[ProjectResponse]:
+def get_projects(db: Session, status_name: Optional[str] = None, user_id: Optional[int] = None,
+                 visible: Optional[str] = None) -> List[ProjectResponse]:
     q = db.query(Project)
     if status_name:
         q = q.filter(Project.status_id == _status_id(db, status_name))
+    if visible == "dashboard":
+        q = q.filter(Project.show_in_dashboard == True)  # noqa: E712
+    elif visible == "weekly":
+        q = q.filter(Project.show_in_weekly == True)  # noqa: E712
     projects = _sort_projects(db, q.all(), user_id)
     return [_to_response(db, p) for p in projects]
 
@@ -51,7 +57,8 @@ def get_project(db: Session, project_id: int) -> ProjectResponse:
 
 
 def get_dashboard(db: Session, user_id: Optional[int] = None) -> DashboardResponse:
-    projects = _sort_projects(db, db.query(Project).all(), user_id)
+    all_projects = db.query(Project).filter(Project.show_in_dashboard == True).all()  # noqa: E712
+    projects = _sort_projects(db, all_projects, user_id)
     statuses = {s.id: s.name for s in db.query(ProjectStatus).all()}
     types = {t.id: t.name for t in db.query(ProjectType).all()}
 
@@ -123,6 +130,8 @@ def create_project(db: Session, req: ProjectCreateRequest, actor_id: int) -> Pro
         type_id=req.type_id, status_id=status_id, pm_user_id=req.pm_user_id,
         start_date=req.start_date, end_date=req.end_date,
         nas_path=req.nas_path, git_url=req.git_url,
+        show_in_dashboard=True if req.show_in_dashboard is None else req.show_in_dashboard,
+        show_in_weekly=True if req.show_in_weekly is None else req.show_in_weekly,
     )
     db.add(project)
     db.flush()
@@ -150,7 +159,8 @@ def update_project(db: Session, project_id: int, req: ProjectUpdateRequest, acto
 
     # 필드별 변경 감사 로그
     for field in ("name", "code", "description", "type_id",
-                  "pm_user_id", "start_date", "end_date", "nas_path", "git_url"):
+                  "pm_user_id", "start_date", "end_date", "nas_path", "git_url",
+                  "show_in_dashboard", "show_in_weekly"):
         if field not in provided:
             continue
         old = getattr(project, field)
@@ -339,6 +349,7 @@ def _to_response(db: Session, project: Project) -> ProjectResponse:
         pm_user_id=project.pm_user_id, pm_name=_pm_name(db, project),
         start_date=project.start_date, end_date=project.end_date,
         nas_path=project.nas_path, git_url=project.git_url,
+        show_in_dashboard=project.show_in_dashboard, show_in_weekly=project.show_in_weekly,
         sort_order=project.sort_order,
         member_count=len(members), members=members,
         created_at=project.created_at, updated_at=project.updated_at,

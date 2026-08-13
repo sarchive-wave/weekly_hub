@@ -15,10 +15,10 @@ router = APIRouter(tags=["projects"])
 
 # ── 목록/생성/정렬 ──────────────────────────────────────────
 @router.get("", response_model=List[ProjectResponse])
-def list_projects(status: Optional[str] = None, db: Session = Depends(get_db),
-                  user: User = Depends(get_current_user)):
-    # status=진행중|완료 로 필터 (종료 메뉴는 status=완료), 개인 순서 적용
-    return project_service.get_projects(db, status, user.id)
+def list_projects(status: Optional[str] = None, visible: Optional[str] = None,
+                  db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    # status=진행중|완료, visible=dashboard|weekly(노출 필터), 개인 순서 적용
+    return project_service.get_projects(db, status, user.id, visible)
 
 
 @router.put("/my-order")
