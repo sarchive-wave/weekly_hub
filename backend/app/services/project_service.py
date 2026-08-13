@@ -6,6 +6,7 @@ from app.models.project import Project
 from app.models.project_type import ProjectType
 from app.models.project_status import ProjectStatus
 from app.models.project_member import ProjectMember
+from app.models.user_project_order import UserProjectOrder
 from app.models.user import User
 from app.models.week import Week
 from app.models.report import Report, ReportEntry
@@ -29,20 +30,28 @@ FIELD_LABELS = {
 
 
 # ── 조회 ────────────────────────────────────────────────────
-def get_projects(db: Session, status_name: Optional[str] = None) -> List[ProjectResponse]:
+def get_projects(db: Session, status_name: Optional[str] = None, user_id: Optional[int] = None) -> List[ProjectResponse]:
     q = db.query(Project)
     if status_name:
         q = q.filter(Project.status_id == _status_id(db, status_name))
-    projects = q.order_by(Project.sort_order.asc(), Project.id.asc()).all()
+    projects = _sort_projects(db, q.all(), user_id)
     return [_to_response(db, p) for p in projects]
+
+
+def set_my_order(db: Session, user_id: int, ids: List[int]) -> None:
+    """사용자 개인 프로젝트 순서 저장(전달 순서대로 1..N)."""
+    db.query(UserProjectOrder).filter(UserProjectOrder.user_id == user_id).delete()
+    for order, pid in enumerate(ids, start=1):
+        db.add(UserProjectOrder(user_id=user_id, project_id=pid, sort_order=order))
+    db.commit()
 
 
 def get_project(db: Session, project_id: int) -> ProjectResponse:
     return _to_response(db, _find(db, project_id))
 
 
-def get_dashboard(db: Session) -> DashboardResponse:
-    projects = db.query(Project).order_by(Project.sort_order.asc(), Project.id.asc()).all()
+def get_dashboard(db: Session, user_id: Optional[int] = None) -> DashboardResponse:
+    projects = _sort_projects(db, db.query(Project).all(), user_id)
     statuses = {s.id: s.name for s in db.query(ProjectStatus).all()}
     types = {t.id: t.name for t in db.query(ProjectType).all()}
 
@@ -246,6 +255,18 @@ def _find(db: Session, project_id: int) -> Project:
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="프로젝트를 찾을 수 없습니다.")
     return project
+
+
+def _personal_order(db: Session, user_id: int) -> dict:
+    rows = db.query(UserProjectOrder).filter(UserProjectOrder.user_id == user_id).all()
+    return {r.project_id: r.sort_order for r in rows}
+
+
+def _sort_projects(db: Session, projects: list, user_id: Optional[int]) -> list:
+    """개인 순서 우선, 없으면 가나다(이름) 순."""
+    order = _personal_order(db, user_id) if user_id else {}
+    BIG = 10 ** 9
+    return sorted(projects, key=lambda p: (order.get(p.id, BIG), p.name or ""))
 
 
 def _status_id(db: Session, name: str) -> Optional[int]:

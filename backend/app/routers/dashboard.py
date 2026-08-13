@@ -10,5 +10,5 @@ router = APIRouter(tags=["dashboard"])
 
 
 @router.get("", response_model=DashboardResponse)
-def get_dashboard(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    return project_service.get_dashboard(db)
+def get_dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return project_service.get_dashboard(db, user.id)

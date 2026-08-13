@@ -7,7 +7,6 @@ import MainPage from './pages/MainPage';
 import WeekDetailPage from './pages/WeekDetailPage';
 import SettingsPage from './pages/SettingsPage';
 import DashboardPage from './pages/DashboardPage';
-import ProjectListPage from './pages/ProjectListPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ClosedProjectsPage from './pages/ClosedProjectsPage';
 
@@ -50,7 +49,6 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/" element={<RequireAuth><DashboardPage /></RequireAuth>} />
-      <Route path="/projects" element={<RequireAuth><ProjectListPage /></RequireAuth>} />
       <Route path="/projects/:projectId" element={<RequireAuth><ProjectDetailPage /></RequireAuth>} />
       <Route path="/closed" element={<RequireAuth><ClosedProjectsPage /></RequireAuth>} />
       <Route path="/weekly" element={<RequireAuth><MainPage /></RequireAuth>} />

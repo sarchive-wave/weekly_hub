@@ -24,6 +24,9 @@ export const projectApi = {
   reorder: async (ids: number[]) => {
     await client.put('/api/v1/projects/reorder', { ids });
   },
+  setMyOrder: async (ids: number[]) => {
+    await client.put('/api/v1/projects/my-order', { ids });
+  },
   complete: async (id: number) => {
     const res = await client.post(`/api/v1/projects/${id}/complete`);
     return res.data as Project;

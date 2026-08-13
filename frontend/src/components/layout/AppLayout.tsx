@@ -13,7 +13,6 @@ interface Props {
 
 const NAV = [
   { label: '대시보드', path: '/' },
-  { label: '프로젝트', path: '/projects' },
   { label: '종료', path: '/closed' },
   { label: '주간회의', path: '/weekly' },
 ];
