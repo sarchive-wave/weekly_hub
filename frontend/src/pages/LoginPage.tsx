@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Card, CardContent, TextField, Button, Typography, Alert } from '@mui/material';
+import { Box, Card, CardContent, TextField, Button, Typography, Alert, ThemeProvider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getTheme } from '../theme';
+
+// 로그인 화면은 전역 다크모드와 무관하게 항상 라이트(흰 카드·검은 글자)로 렌더 → 입력 가시성/자동완성 보장
+const lightTheme = getTheme('light');
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -27,35 +31,36 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'action.hover' }}>
-      <Card elevation={0} sx={{ width: 380, border: '1px solid #E2E8F0', borderRadius: 3 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h5" fontWeight={700} textAlign="center" gutterBottom>AI Weekly Hub</Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 3 }}>팀 주간보고 관리 시스템</Typography>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="아이디"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              size="small"
-              fullWidth
-              autoFocus
-            />
-            <TextField
-              label="비밀번호"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              size="small"
-              fullWidth
-            />
-            <Button type="submit" variant="contained" fullWidth disabled={loading} sx={{ mt: 1, py: 1.2 }}>
-              로그인
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#000000' }}>
+      <ThemeProvider theme={lightTheme}>
+        <Card elevation={0} sx={{ width: 380, bgcolor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 3 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h5" fontWeight={700} textAlign="center" sx={{ mb: 3, color: '#0F172A' }}>AI Weekly Hub</Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="아이디"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                size="small"
+                fullWidth
+                autoFocus
+              />
+              <TextField
+                label="비밀번호"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                size="small"
+                fullWidth
+              />
+              <Button type="submit" variant="contained" fullWidth disabled={loading} sx={{ mt: 1, py: 1.2 }}>
+                로그인
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </ThemeProvider>
     </Box>
   );
 };
