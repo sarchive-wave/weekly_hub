@@ -116,7 +116,7 @@ const ProjectFormDialog: React.FC<Props> = ({ open, initial, onClose, onSaved })
             <InputLabel>PM</InputLabel>
             <Select label="PM" value={form.pm_user_id ?? ''} onChange={(e) => set('pm_user_id', e.target.value === '' ? null : Number(e.target.value))}>
               <MenuItem value="">미지정</MenuItem>
-              {users.filter((u) => u.is_active || u.id === form.pm_user_id).map((u) => <MenuItem key={u.id} value={u.id}>{u.display_name}</MenuItem>)}
+              {users.filter((u) => (u.is_active && u.in_dashboard) || u.id === form.pm_user_id).map((u) => <MenuItem key={u.id} value={u.id}>{u.display_name}</MenuItem>)}
             </Select>
           </FormControl>
           <TextField label="시작일" type="date" size="small" InputLabelProps={{ shrink: true }} value={form.start_date ?? ''} onChange={(e) => set('start_date', e.target.value)} />

@@ -5,6 +5,8 @@ export interface User {
   role: string;
   position?: string | null;
   team?: string | null;
+  in_dashboard?: boolean;
+  in_weekly?: boolean;
   is_active: boolean;
   sort_order: number | null;
   created_at: string;

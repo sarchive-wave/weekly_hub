@@ -11,7 +11,7 @@ from app.ordering import user_sort_key
 
 def get_weeks(db: Session) -> List[WeekResponse]:
     weeks = db.query(Week).order_by(Week.year.desc(), Week.month.desc(), Week.week_num.asc()).all()
-    active_count = db.query(User).filter(User.is_active == True).count()
+    active_count = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
     result = []
     for w in weeks:
         done = db.query(Report).filter(Report.week_id == w.id, Report.status == "done").count()
@@ -41,7 +41,7 @@ def create_week(db: Session, req: WeekCreateRequest) -> WeekResponse:
     db.commit()
     db.refresh(week)
     r = WeekResponse.model_validate(week)
-    r.total_members = db.query(User).filter(User.is_active == True).count()
+    r.total_members = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
     r.done_members = 0
     return r
 
@@ -64,7 +64,7 @@ def update_week(db: Session, week_id: int, req: WeekCreateRequest) -> WeekRespon
     db.commit()
     db.refresh(week)
     r = WeekResponse.model_validate(week)
-    r.total_members = db.query(User).filter(User.is_active == True).count()
+    r.total_members = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
     r.done_members = db.query(Report).filter(Report.week_id == week.id, Report.status == "done").count()
     return r
 
@@ -77,7 +77,7 @@ def delete_week(db: Session, week_id: int) -> None:
 
 def get_members(db: Session, week_id: int) -> List[MemberStatusResponse]:
     _find(db, week_id)
-    users = db.query(User).filter(User.is_active == True).all()  # noqa: E712
+    users = db.query(User).filter(User.is_active == True, User.in_weekly == True).all()  # noqa: E712
     users.sort(key=user_sort_key)  # 직책 순 → 이름 가나다
     result = []
     for u in users:

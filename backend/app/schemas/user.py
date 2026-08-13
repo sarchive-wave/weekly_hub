@@ -10,6 +10,8 @@ class UserCreateRequest(BaseModel):
     role: str = "user"
     position: Optional[str] = None
     team: Optional[str] = None
+    in_dashboard: Optional[bool] = True
+    in_weekly: Optional[bool] = True
 
 
 class UserUpdateRequest(BaseModel):
@@ -19,6 +21,8 @@ class UserUpdateRequest(BaseModel):
     is_active: bool
     position: Optional[str] = None
     team: Optional[str] = None
+    in_dashboard: Optional[bool] = None
+    in_weekly: Optional[bool] = None
 
 
 class ResetPasswordRequest(BaseModel):
@@ -36,6 +40,8 @@ class UserResponse(BaseModel):
     role: str
     position: Optional[str] = None
     team: Optional[str] = None
+    in_dashboard: bool = True
+    in_weekly: bool = True
     is_active: bool
     sort_order: Optional[int]
     created_at: datetime

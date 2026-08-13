@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Button, Table, TableBody, TableCell, TableHead, TableRow, Paper,
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Select, MenuItem, FormControl, InputLabel, Chip, Switch,
+  TextField, Select, MenuItem, FormControl, InputLabel, Chip, Switch, Checkbox, FormControlLabel, Stack, Typography,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, LockReset as LockResetIcon } from '@mui/icons-material';
 import { userApi } from '../../api/userApi';
@@ -16,8 +16,8 @@ const AccountTab: React.FC = () => {
   const [editTarget, setEditTarget] = useState<User | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [resetTarget, setResetTarget] = useState<User | null>(null);
-  const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'user', position: '', team: '' });
-  const [editForm, setEditForm] = useState({ username: '', display_name: '', role: 'user', is_active: true, position: '', team: '' });
+  const [form, setForm] = useState({ username: '', password: '', display_name: '', role: 'user', position: '', team: '', in_dashboard: true, in_weekly: true });
+  const [editForm, setEditForm] = useState({ username: '', display_name: '', role: 'user', is_active: true, position: '', team: '', in_dashboard: true, in_weekly: true });
   const [newPw, setNewPw] = useState('');
 
   useEffect(() => { userApi.list().then(setUsers); }, []);
@@ -29,7 +29,7 @@ const AccountTab: React.FC = () => {
     try {
       await userApi.create(form);
       setCreateOpen(false);
-      setForm({ username: '', password: '', display_name: '', role: 'user', position: '', team: '' });
+      setForm({ username: '', password: '', display_name: '', role: 'user', position: '', team: '', in_dashboard: true, in_weekly: true });
       const list = await userApi.list();   // 서버에서 최신 목록 재조회
       setUsers(list);
     } catch (e: any) {
@@ -75,6 +75,7 @@ const AccountTab: React.FC = () => {
               <TableCell>직책</TableCell>
               <TableCell>소속</TableCell>
               <TableCell>역할</TableCell>
+              <TableCell>참여</TableCell>
               <TableCell>상태</TableCell>
               <TableCell align="right">관리</TableCell>
             </TableRow>
@@ -90,10 +91,16 @@ const AccountTab: React.FC = () => {
                   <Chip label={u.role === 'admin' ? '관리자' : '일반'} size="small" color={u.role === 'admin' ? 'primary' : 'default'} />
                 </TableCell>
                 <TableCell>
+                  <Stack direction="row" spacing={0.5}>
+                    {u.in_dashboard && <Chip size="small" label="대시보드" sx={{ height: 20, fontSize: 11 }} />}
+                    {u.in_weekly && <Chip size="small" label="주간보고" sx={{ height: 20, fontSize: 11 }} />}
+                  </Stack>
+                </TableCell>
+                <TableCell>
                   <Chip label={u.is_active ? '활성' : '비활성'} size="small" color={u.is_active ? 'success' : 'default'} />
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => { setEditTarget(u); setEditForm({ username: u.username, display_name: u.display_name, role: u.role, is_active: u.is_active, position: u.position || '', team: u.team || '' }); }}>
+                  <IconButton size="small" onClick={() => { setEditTarget(u); setEditForm({ username: u.username, display_name: u.display_name, role: u.role, is_active: u.is_active, position: u.position || '', team: u.team || '', in_dashboard: u.in_dashboard ?? true, in_weekly: u.in_weekly ?? true }); }}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                   <IconButton size="small" onClick={() => setResetTarget(u)}>
@@ -132,6 +139,13 @@ const AccountTab: React.FC = () => {
                 <MenuItem value="admin">관리자</MenuItem>
               </Select>
             </FormControl>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>참여</Typography>
+              <Stack direction="row" spacing={1}>
+                <FormControlLabel control={<Checkbox size="small" checked={form.in_dashboard} onChange={(e) => setForm((f) => ({ ...f, in_dashboard: e.target.checked }))} />} label="대시보드" />
+                <FormControlLabel control={<Checkbox size="small" checked={form.in_weekly} onChange={(e) => setForm((f) => ({ ...f, in_weekly: e.target.checked }))} />} label="주간보고" />
+              </Stack>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -162,6 +176,13 @@ const AccountTab: React.FC = () => {
                 <MenuItem value="admin">관리자</MenuItem>
               </Select>
             </FormControl>
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>참여</Typography>
+              <Stack direction="row" spacing={1}>
+                <FormControlLabel control={<Checkbox size="small" checked={editForm.in_dashboard} onChange={(e) => setEditForm((f) => ({ ...f, in_dashboard: e.target.checked }))} />} label="대시보드" />
+                <FormControlLabel control={<Checkbox size="small" checked={editForm.in_weekly} onChange={(e) => setEditForm((f) => ({ ...f, in_weekly: e.target.checked }))} />} label="주간보고" />
+              </Stack>
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Switch checked={editForm.is_active} onChange={(e) => setEditForm((f) => ({ ...f, is_active: e.target.checked }))} />
               <span>활성 계정</span>

@@ -25,6 +25,8 @@ def create_user(db: Session, req: UserCreateRequest) -> UserResponse:
         role=req.role,
         position=req.position,
         team=req.team,
+        in_dashboard=True if req.in_dashboard is None else req.in_dashboard,
+        in_weekly=True if req.in_weekly is None else req.in_weekly,
     )
     db.add(user)
     db.commit()
@@ -46,6 +48,10 @@ def update_user(db: Session, user_id: int, req: UserUpdateRequest) -> UserRespon
     user.is_active = req.is_active
     user.position = req.position
     user.team = req.team
+    if req.in_dashboard is not None:
+        user.in_dashboard = req.in_dashboard
+    if req.in_weekly is not None:
+        user.in_weekly = req.in_weekly
     db.commit()
     db.refresh(user)
     return UserResponse.model_validate(user)

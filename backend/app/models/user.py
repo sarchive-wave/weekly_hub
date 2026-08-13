@@ -14,6 +14,8 @@ class User(Base):
     display_name = Column(String(50), nullable=False)
     position = Column(String(50))  # 직책
     team = Column(String(50))      # 소속/팀
+    in_dashboard = Column(Boolean, nullable=False, default=True)  # 대시보드(PM/팀원) 대상
+    in_weekly = Column(Boolean, nullable=False, default=True)     # 주간보고 작성 대상
     is_active = Column(Boolean, nullable=False, default=True)
     sort_order = Column(Integer, default=999)
     created_at = Column(DateTime, default=datetime.utcnow)

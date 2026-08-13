@@ -6,11 +6,11 @@ export const userApi = {
     const res = await client.get('/api/v1/users');
     return res.data as User[];
   },
-  create: async (data: { username: string; password: string; display_name: string; role: string; position?: string; team?: string }) => {
+  create: async (data: { username: string; password: string; display_name: string; role: string; position?: string; team?: string; in_dashboard?: boolean; in_weekly?: boolean }) => {
     const res = await client.post('/api/v1/users', data);
     return res.data as User;
   },
-  update: async (id: number, data: { username: string; display_name: string; role: string; is_active: boolean; position?: string; team?: string }) => {
+  update: async (id: number, data: { username: string; display_name: string; role: string; is_active: boolean; position?: string; team?: string; in_dashboard?: boolean; in_weekly?: boolean }) => {
     const res = await client.put(`/api/v1/users/${id}`, data);
     return res.data as User;
   },
