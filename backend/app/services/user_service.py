@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserCreateRequest, UserUpdateRequest, UserResponse
 from app.services.auth_service import hash_password
+from app.ordering import user_sort_key
 
 
 def get_users(db: Session) -> List[UserResponse]:
-    users = db.query(User).order_by(User.sort_order.asc(), User.id.asc()).all()
+    users = db.query(User).all()
+    users.sort(key=user_sort_key)  # 직책 순 → 이름 가나다
     return [UserResponse.model_validate(u) for u in users]
 
 

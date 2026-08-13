@@ -17,16 +17,10 @@ from app.schemas.project import (
 )
 from app.schemas.dashboard import DashboardResponse, DashboardItem, CountItem
 from app.services import project_log_service
+from app.ordering import user_sort_key
 
 STATUS_ACTIVE = "진행중"
 STATUS_DONE = "완료"
-
-# 직책 표시 순서 (센터장 → 대리), 미지정은 뒤로
-POSITION_ORDER = {"센터장": 1, "팀장": 2, "차장": 3, "과장": 4, "대리": 5}
-
-
-def _pos_rank(position) -> int:
-    return POSITION_ORDER.get(position or "", 99)
 
 # 감사 로그용 필드 라벨
 FIELD_LABELS = {
@@ -317,7 +311,7 @@ def _member_users(db: Session, project_id: int) -> List[User]:
         .filter(ProjectMember.project_id == project_id)
         .all()
     )
-    rows.sort(key=lambda u: (_pos_rank(u.position), u.sort_order or 999, u.id))
+    rows.sort(key=user_sort_key)  # 직책 순 → 이름 가나다
     return rows
 
 
@@ -328,7 +322,7 @@ def _member_responses(db: Session, project_id: int) -> List[ProjectMemberRespons
         .filter(ProjectMember.project_id == project_id)
         .all()
     )
-    rows.sort(key=lambda mu: (_pos_rank(mu[1].position), mu[1].sort_order or 999, mu[1].id))
+    rows.sort(key=lambda mu: user_sort_key(mu[1]))  # 직책 순 → 이름 가나다
     return [
         ProjectMemberResponse(
             user_id=u.id, display_name=u.display_name,

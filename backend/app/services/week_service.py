@@ -6,6 +6,7 @@ from app.models.project import Project
 from app.models.week import Week
 from app.models.report import Report, ReportEntry
 from app.schemas.week import WeekCreateRequest, WeekResponse, MemberStatusResponse, OverallSummaryResponse, ProjectSummaryItem
+from app.ordering import user_sort_key
 
 
 def get_weeks(db: Session) -> List[WeekResponse]:
@@ -76,7 +77,8 @@ def delete_week(db: Session, week_id: int) -> None:
 
 def get_members(db: Session, week_id: int) -> List[MemberStatusResponse]:
     _find(db, week_id)
-    users = db.query(User).filter(User.is_active == True).order_by(User.sort_order.asc(), User.id.asc()).all()
+    users = db.query(User).filter(User.is_active == True).all()  # noqa: E712
+    users.sort(key=user_sort_key)  # 직책 순 → 이름 가나다
     result = []
     for u in users:
         report = db.query(Report).filter(Report.week_id == week_id, Report.user_id == u.id).first()
@@ -102,13 +104,14 @@ def get_summary(db: Session, week_id: int) -> OverallSummaryResponse:
     ))
     project_map = {p.id: p for p in projects}
 
-    reports = (
-        db.query(Report)
+    report_rows = (
+        db.query(Report, User)
         .join(User, Report.user_id == User.id)
         .filter(Report.week_id == week_id)
-        .order_by(User.sort_order.asc(), User.id.asc())
         .all()
     )
+    report_rows.sort(key=lambda ru: user_sort_key(ru[1]))  # 직책 순 → 이름 가나다
+    reports = [r for r, _u in report_rows]
     data: dict = {}
     for report in reports:
         entries = db.query(ReportEntry).filter(ReportEntry.report_id == report.id).all()
