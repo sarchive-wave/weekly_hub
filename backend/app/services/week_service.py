@@ -16,7 +16,7 @@ def get_weeks(db: Session) -> List[WeekResponse]:
         .order_by(Week.year.desc(), Week.month.desc(), Week.week_num.asc())
         .all()
     )
-    active_count = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
+    active_count = db.query(User).filter(User.is_active == True, User.in_weekly == True, User.role != "admin").count()
     result = []
     for w in weeks:
         done = db.query(Report).filter(Report.week_id == w.id, Report.status == "done").count()
@@ -47,7 +47,7 @@ def create_week(db: Session, req: WeekCreateRequest) -> WeekResponse:
     db.commit()
     db.refresh(week)
     r = WeekResponse.model_validate(week)
-    r.total_members = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
+    r.total_members = db.query(User).filter(User.is_active == True, User.in_weekly == True, User.role != "admin").count()
     r.done_members = 0
     return r
 
@@ -70,7 +70,7 @@ def update_week(db: Session, week_id: int, req: WeekCreateRequest) -> WeekRespon
     db.commit()
     db.refresh(week)
     r = WeekResponse.model_validate(week)
-    r.total_members = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
+    r.total_members = db.query(User).filter(User.is_active == True, User.in_weekly == True, User.role != "admin").count()
     r.done_members = db.query(Report).filter(Report.week_id == week.id, Report.status == "done").count()
     return r
 
@@ -86,11 +86,12 @@ def get_members(db: Session, week_id: int) -> List[MemberStatusResponse]:
     _find(db, week_id)
     # 현재 참여자(활성 + 주간보고 대상) + 이 주차에 보고가 남아있는 사용자(비활성 포함, 과거 기록 열람)
     active_ids = {
-        u.id for u in db.query(User).filter(User.is_active == True, User.in_weekly == True).all()  # noqa: E712
+        u.id for u in db.query(User).filter(User.is_active == True, User.in_weekly == True, User.role != "admin").all()  # noqa: E712
     }
     reported_ids = {r.user_id for r in db.query(Report).filter(Report.week_id == week_id).all()}
     all_ids = active_ids | reported_ids
-    users = db.query(User).filter(User.id.in_(all_ids)).all() if all_ids else []
+    # 관리자는 주간보고 작성자가 아니므로 목록에서 제외
+    users = db.query(User).filter(User.id.in_(all_ids), User.role != "admin").all() if all_ids else []
     users.sort(key=user_sort_key)  # 비활성은 맨 아래 → 직책 → 가나다
     result = []
     for u in users:

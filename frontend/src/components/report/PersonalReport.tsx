@@ -64,7 +64,7 @@ const newSlotId = () => `slot-${++slotCounter}`;
 const PersonalReport: React.FC<Props> = ({
   weekId, userId, displayName, weekStartDate, weekYear, weekMonth, weekNum, onStatusChange,
 }) => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -73,7 +73,7 @@ const PersonalReport: React.FC<Props> = ({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const canEdit = isAdmin || user?.id === userId;
+  const canEdit = user?.id === userId;   // 본인만 작성/수정, 타인(관리자 포함)은 read-only
   const dateLabels = getWeekDateLabels(weekStartDate, weekYear, weekMonth, weekNum);
 
   const load = useCallback(async () => {
