@@ -14,8 +14,12 @@ export const userApi = {
     const res = await client.put(`/api/v1/users/${id}`, data);
     return res.data as User;
   },
-  delete: async (id: number) => {
+  delete: async (id: number) => {   // 소프트 삭제(비활성 처리)
     await client.delete(`/api/v1/users/${id}`);
+  },
+  activate: async (id: number) => {
+    const res = await client.post(`/api/v1/users/${id}/activate`);
+    return res.data as User;
   },
   resetPassword: async (id: number, new_password: string) => {
     await client.post(`/api/v1/users/${id}/reset-password`, { new_password });

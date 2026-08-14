@@ -113,3 +113,11 @@ common.users ─┬─< common.project_members >─┬─ common.projects ─┬
 | 002_user_project_order.sql | 개인 순서 테이블 |
 | 003_project_visibility.sql | show_in_dashboard/weekly |
 | 004_project_fullname_types.sql | full_name 컬럼 + 유형 기획/기타 |
+| 005_user_participation.sql | users.in_dashboard/in_weekly (참여 설정) |
+| 006_preserve_report_entries.sql | report_entries FK SET NULL + project_name 스냅샷(프로젝트 삭제해도 보고 보존) |
+| 007_soft_delete.sql | weeks.is_deleted(주차 소프트 삭제) + 부분 유니크 인덱스 |
+
+## 삭제/보존 정책 (soft delete)
+- **프로젝트 삭제**: report_entries 보존(FK SET NULL, project_name 스냅샷). 화면·DB 모두 과거 보고 유지.
+- **주차 삭제**: `weeks.is_deleted=true`(소프트). 화면에서만 제외, 주차·보고 데이터 보존. 관리자만 가능.
+- **사용자 삭제**: `users.is_active=false`(소프트/비활성). 과거 보고 보존, 주간 멤버에 "(비활성)"으로 맨 아래 표시, 활성화로 복구.

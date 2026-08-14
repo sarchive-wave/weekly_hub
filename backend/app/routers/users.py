@@ -33,7 +33,13 @@ def update_user(user_id: int, req: UserUpdateRequest, db: Session = Depends(get_
 
 @router.delete("/{user_id}", status_code=204)
 def delete_user(user_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    # 소프트 삭제(비활성 처리)
     user_service.delete_user(db, user_id)
+
+
+@router.post("/{user_id}/activate", response_model=UserResponse)
+def activate_user(user_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    return user_service.activate_user(db, user_id)
 
 
 @router.post("/{user_id}/reset-password")

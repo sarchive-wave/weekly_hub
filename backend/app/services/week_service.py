@@ -10,7 +10,12 @@ from app.ordering import user_sort_key
 
 
 def get_weeks(db: Session) -> List[WeekResponse]:
-    weeks = db.query(Week).order_by(Week.year.desc(), Week.month.desc(), Week.week_num.asc()).all()
+    weeks = (
+        db.query(Week)
+        .filter(Week.is_deleted == False)  # noqa: E712
+        .order_by(Week.year.desc(), Week.month.desc(), Week.week_num.asc())
+        .all()
+    )
     active_count = db.query(User).filter(User.is_active == True, User.in_weekly == True).count()
     result = []
     for w in weeks:
@@ -31,7 +36,8 @@ def _validate_dates(req: WeekCreateRequest) -> None:
 def create_week(db: Session, req: WeekCreateRequest) -> WeekResponse:
     _validate_dates(req)
     existing = db.query(Week).filter(
-        Week.year == req.year, Week.month == req.month, Week.week_num == req.week_num
+        Week.year == req.year, Week.month == req.month, Week.week_num == req.week_num,
+        Week.is_deleted == False,  # noqa: E712
     ).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 주차입니다.")
@@ -51,7 +57,7 @@ def update_week(db: Session, week_id: int, req: WeekCreateRequest) -> WeekRespon
     _validate_dates(req)
     dup = db.query(Week).filter(
         Week.year == req.year, Week.month == req.month, Week.week_num == req.week_num,
-        Week.id != week_id,
+        Week.id != week_id, Week.is_deleted == False,  # noqa: E712
     ).first()
     if dup:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 주차입니다.")
@@ -70,21 +76,29 @@ def update_week(db: Session, week_id: int, req: WeekCreateRequest) -> WeekRespon
 
 
 def delete_week(db: Session, week_id: int) -> None:
+    # 소프트 삭제: 화면에서만 사라지고 주차·주간보고 데이터는 DB에 보존
     week = _find(db, week_id)
-    db.delete(week)
+    week.is_deleted = True
     db.commit()
 
 
 def get_members(db: Session, week_id: int) -> List[MemberStatusResponse]:
     _find(db, week_id)
-    users = db.query(User).filter(User.is_active == True, User.in_weekly == True).all()  # noqa: E712
-    users.sort(key=user_sort_key)  # 직책 순 → 이름 가나다
+    # 현재 참여자(활성 + 주간보고 대상) + 이 주차에 보고가 남아있는 사용자(비활성 포함, 과거 기록 열람)
+    active_ids = {
+        u.id for u in db.query(User).filter(User.is_active == True, User.in_weekly == True).all()  # noqa: E712
+    }
+    reported_ids = {r.user_id for r in db.query(Report).filter(Report.week_id == week_id).all()}
+    all_ids = active_ids | reported_ids
+    users = db.query(User).filter(User.id.in_(all_ids)).all() if all_ids else []
+    users.sort(key=user_sort_key)  # 비활성은 맨 아래 → 직책 → 가나다
     result = []
     for u in users:
         report = db.query(Report).filter(Report.week_id == week_id, Report.user_id == u.id).first()
+        name = u.display_name if u.is_active else f"{u.display_name} (비활성)"
         result.append(MemberStatusResponse(
             user_id=u.id,
-            display_name=u.display_name,
+            display_name=name,
             status=report.status if report else "none",
             sort_order=u.sort_order,
         ))

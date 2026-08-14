@@ -8,5 +8,6 @@ def pos_rank(position) -> int:
 
 
 def user_sort_key(user):
-    # 직책 순위 → 이름 가나다(한글 유니코드 = 가나다 순), 동률은 id
-    return (pos_rank(getattr(user, "position", None)), (user.display_name or ""), user.id)
+    # 비활성 사용자는 맨 아래 → 직책 순위 → 이름 가나다 → id
+    inactive = 0 if getattr(user, "is_active", True) else 1
+    return (inactive, pos_rank(getattr(user, "position", None)), (user.display_name or ""), user.id)

@@ -58,11 +58,20 @@ def update_user(db: Session, user_id: int, req: UserUpdateRequest) -> UserRespon
 
 
 def delete_user(db: Session, user_id: int) -> None:
+    # 소프트 삭제: 완전 삭제하지 않고 비활성 처리 → 과거 주간보고 등 데이터 보존
     user = _find(db, user_id)
     if user.username == "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="admin 계정은 삭제할 수 없습니다.")
-    db.delete(user)
+    user.is_active = False
     db.commit()
+
+
+def activate_user(db: Session, user_id: int) -> UserResponse:
+    user = _find(db, user_id)
+    user.is_active = True
+    db.commit()
+    db.refresh(user)
+    return UserResponse.model_validate(user)
 
 
 def reset_password(db: Session, user_id: int, new_password: str) -> None:

@@ -4,7 +4,7 @@ import {
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Select, MenuItem, FormControl, InputLabel, Chip, Switch, Checkbox, FormControlLabel, Stack, Typography,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, LockReset as LockResetIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, LockReset as LockResetIcon, Restore as RestoreIcon } from '@mui/icons-material';
 import { userApi } from '../../api/userApi';
 import type { User } from '../../types';
 
@@ -47,11 +47,16 @@ const AccountTab: React.FC = () => {
     } catch (e: any) { alert(e.response?.data?.detail || '수정에 실패했습니다.'); }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async () => {   // 비활성화(소프트 삭제)
     if (!deleteTarget) return;
     await userApi.delete(deleteTarget.id);
-    setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
     setDeleteTarget(null);
+    userApi.list().then(setUsers);   // 목록 갱신(비활성 상태로 유지)
+  };
+
+  const handleActivate = async (u: User) => {
+    await userApi.activate(u.id);
+    userApi.list().then(setUsers);
   };
 
   const handleReset = async () => {
@@ -106,9 +111,15 @@ const AccountTab: React.FC = () => {
                   <IconButton size="small" onClick={() => setResetTarget(u)}>
                     <LockResetIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => setDeleteTarget(u)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {u.is_active ? (
+                    <IconButton size="small" color="error" title="비활성화" onClick={() => setDeleteTarget(u)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  ) : (
+                    <IconButton size="small" color="success" title="활성화" onClick={() => handleActivate(u)}>
+                      <RestoreIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -207,13 +218,16 @@ const AccountTab: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* 삭제 확인 */}
+      {/* 비활성화 확인 */}
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>계정 삭제</DialogTitle>
-        <DialogContent>"{deleteTarget?.display_name}" 계정을 삭제하시겠습니까?</DialogContent>
+        <DialogTitle>계정 비활성화</DialogTitle>
+        <DialogContent>
+          "{deleteTarget?.display_name}" 계정을 비활성화하시겠습니까?<br />
+          완전 삭제가 아니며 과거 주간보고 등 데이터는 보존됩니다. 언제든 다시 활성화할 수 있습니다.
+        </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteTarget(null)} color="inherit">취소</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">삭제</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">비활성화</Button>
         </DialogActions>
       </Dialog>
     </Box>

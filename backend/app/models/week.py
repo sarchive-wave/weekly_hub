@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Date, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -14,8 +14,9 @@ class Week(Base):
     title = Column(String(50), nullable=False)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
+    is_deleted = Column(Boolean, nullable=False, default=False)  # 소프트 삭제(데이터 보존)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     reports = relationship("Report", back_populates="week", cascade="all, delete-orphan")
 
-    __table_args__ = (UniqueConstraint("year", "month", "week_num"), {"schema": "weekly"})
+    __table_args__ = {"schema": "weekly"}
