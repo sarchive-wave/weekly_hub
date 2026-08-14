@@ -5,6 +5,7 @@ import AccountTab from '../components/settings/AccountTab';
 import ProjectAdminTab from '../components/settings/ProjectAdminTab';
 import MasterTab from '../components/settings/MasterTab';
 import PermissionTab from '../components/settings/PermissionTab';
+import ProjectLogTab from '../components/settings/ProjectLogTab';
 
 const SettingsPage: React.FC = () => {
   const [tab, setTab] = useState(0);
@@ -19,12 +20,14 @@ const SettingsPage: React.FC = () => {
             <Tab label="유형·상태 관리" />
             <Tab label="인력 관리" />
             <Tab label="시스템 관리" />
+            <Tab label="관리이력" />
           </Tabs>
           <Box sx={{ p: 3 }}>
             {tab === 0 && <ProjectAdminTab />}
             {tab === 1 && <MasterTab />}
             {tab === 2 && <AccountTab />}
             {tab === 3 && <PermissionTab />}
+            {tab === 4 && <ProjectLogTab />}
           </Box>
         </Paper>
       </Box>

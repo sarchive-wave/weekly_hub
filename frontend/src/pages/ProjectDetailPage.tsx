@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box, Typography, Paper, Chip, Button, CircularProgress, Grid, Stack, Divider,
-  Tabs, Tab, Table, TableHead, TableBody, TableRow, TableCell, Link as MuiLink,
+  Link as MuiLink,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon, Edit as EditIcon, Group as GroupIcon,
@@ -13,7 +13,7 @@ import ProjectFormDialog from '../components/project/ProjectFormDialog';
 import MembersDialog from '../components/project/MembersDialog';
 import { projectApi } from '../api/projectApi';
 import { useAuth } from '../contexts/AuthContext';
-import type { Project, ProjectLog, ProjectWeeklyItem } from '../types';
+import type { Project, ProjectWeeklyItem } from '../types';
 
 const InfoRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <Box sx={{ display: 'flex', py: 0.7 }}>
@@ -30,16 +30,14 @@ const ProjectDetailPage: React.FC = () => {
 
   const [project, setProject] = useState<Project | null>(null);
   const [weekly, setWeekly] = useState<ProjectWeeklyItem[]>([]);
-  const [logs, setLogs] = useState<ProjectLog[]>([]);
-  const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([projectApi.get(pid), projectApi.getWeekly(pid), projectApi.getLogs(pid)])
-      .then(([p, w, l]) => { setProject(p); setWeekly(w); setLogs(l); })
+    Promise.all([projectApi.get(pid), projectApi.getWeekly(pid)])
+      .then(([p, w]) => { setProject(p); setWeekly(w); })
       .finally(() => setLoading(false));
   }, [pid]);
   useEffect(load, [load]);
@@ -122,59 +120,34 @@ const ProjectDetailPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* 탭 */}
-        <Paper elevation={0} sx={{ border: '1px solid #E2E8F0', borderRadius: 2, mt: 2, overflow: 'hidden' }}>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: '1px solid #E2E8F0', px: 2 }}>
-            <Tab label="주간보고 (read)" />
-            <Tab label="변경 이력" />
-          </Tabs>
+        {/* 주간 진행 (read) — 변경이력은 설정 > 관리이력으로 이동 */}
+        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mt: 2, overflow: 'hidden' }}>
+          <Box sx={{ px: 2.5, py: 1.25, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="subtitle2" fontWeight={700}>주간 진행 (read)</Typography>
+          </Box>
           <Box sx={{ p: 2.5 }}>
-            {tab === 0 && (
-              weekly.length === 0
-                ? <Typography variant="body2" color="text.secondary">이 프로젝트로 작성된 주간보고가 없습니다.</Typography>
-                : <Stack spacing={2}>
-                    {weekly.map((w) => (
-                      <Box key={w.week_id}>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>{w.title}</Typography>
-                        <Grid container spacing={1}>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary">금주</Typography>
-                            {w.current_work.length === 0 ? <Typography variant="body2" color="text.disabled">-</Typography>
-                              : w.current_work.map((t, i) => <Typography key={i} variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>• {t}</Typography>)}
-                          </Grid>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="caption" color="text.secondary">차주</Typography>
-                            {w.next_work.length === 0 ? <Typography variant="body2" color="text.disabled">-</Typography>
-                              : w.next_work.map((t, i) => <Typography key={i} variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>• {t}</Typography>)}
-                          </Grid>
+            {weekly.length === 0
+              ? <Typography variant="body2" color="text.secondary">이 프로젝트로 작성된 주간보고가 없습니다.</Typography>
+              : <Stack spacing={2}>
+                  {weekly.map((w) => (
+                    <Box key={w.week_id}>
+                      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>{w.title}</Typography>
+                      <Grid container spacing={1}>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">금주</Typography>
+                          {w.current_work.length === 0 ? <Typography variant="body2" color="text.disabled">-</Typography>
+                            : w.current_work.map((t, i) => <Typography key={i} variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>• {t}</Typography>)}
                         </Grid>
-                        <Divider sx={{ mt: 1.5 }} />
-                      </Box>
-                    ))}
-                  </Stack>
-            )}
-            {tab === 1 && (
-              logs.length === 0
-                ? <Typography variant="body2" color="text.secondary">변경 이력이 없습니다.</Typography>
-                : <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: 'action.hover' }}>
-                        <TableCell>일시</TableCell><TableCell>담당</TableCell><TableCell>변경</TableCell><TableCell>이전</TableCell><TableCell>이후</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {logs.map((l) => (
-                        <TableRow key={l.id}>
-                          <TableCell><Typography variant="caption">{l.created_at.replace('T', ' ').slice(0, 16)}</Typography></TableCell>
-                          <TableCell>{l.actor_name ?? '-'}</TableCell>
-                          <TableCell>{l.action}</TableCell>
-                          <TableCell><Typography variant="caption" color="text.secondary">{l.old_value ?? '-'}</Typography></TableCell>
-                          <TableCell><Typography variant="caption">{l.new_value ?? '-'}</Typography></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-            )}
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="caption" color="text.secondary">차주</Typography>
+                          {w.next_work.length === 0 ? <Typography variant="body2" color="text.disabled">-</Typography>
+                            : w.next_work.map((t, i) => <Typography key={i} variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>• {t}</Typography>)}
+                        </Grid>
+                      </Grid>
+                      <Divider sx={{ mt: 1.5 }} />
+                    </Box>
+                  ))}
+                </Stack>}
           </Box>
         </Paper>
       </Box>
