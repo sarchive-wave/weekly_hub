@@ -28,6 +28,7 @@ def save_report(db: Session, week_id: int, user_id: int, req: ReportSaveRequest)
         entry = ReportEntry(
             report_id=report.id,
             project_id=entry_data.project_id,
+            project_name=project.name,   # 작성 시점 프로젝트명 스냅샷
             current_work=entry_data.current_work or "",
             next_work=entry_data.next_work or "",
         )
@@ -56,10 +57,12 @@ def _to_response(db: Session, report: Report) -> ReportResponse:
     entries = db.query(ReportEntry).filter(ReportEntry.report_id == report.id).all()
     entry_responses = []
     for e in entries:
-        project = db.query(Project).filter(Project.id == e.project_id).first()
+        project = db.query(Project).filter(Project.id == e.project_id).first() if e.project_id else None
+        # 프로젝트가 남아있으면 현재명, 삭제됐으면 작성 시점 스냅샷명 사용
+        name = project.name if project else (e.project_name or "")
         entry_responses.append(EntryResponse(
             project_id=e.project_id,
-            project_name=project.name if project else "",
+            project_name=name,
             current_work=e.current_work or "",
             next_work=e.next_work or "",
         ))

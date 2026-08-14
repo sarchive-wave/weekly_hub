@@ -24,7 +24,9 @@ class ReportEntry(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     report_id = Column(Integer, ForeignKey("weekly.reports.id", ondelete="CASCADE"), nullable=False)
-    project_id = Column(Integer, ForeignKey("common.projects.id", ondelete="CASCADE"), nullable=False)
+    # 프로젝트 삭제 시 항목은 보존하고 연결만 끊음(SET NULL). 이름은 스냅샷으로 유지.
+    project_id = Column(Integer, ForeignKey("common.projects.id", ondelete="SET NULL"), nullable=True)
+    project_name = Column(String(100))  # 작성 시점 프로젝트명 스냅샷
     current_work = Column(String, default="")
     next_work = Column(String, default="")
 

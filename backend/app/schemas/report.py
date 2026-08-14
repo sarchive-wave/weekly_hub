@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -17,7 +17,7 @@ class StatusUpdateRequest(BaseModel):
 
 
 class EntryResponse(BaseModel):
-    project_id: int
+    project_id: Optional[int] = None   # 프로젝트 삭제 시 None(과거 항목 보존)
     project_name: str
     current_work: str
     next_work: str

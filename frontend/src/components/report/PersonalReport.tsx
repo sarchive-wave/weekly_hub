@@ -276,12 +276,14 @@ const PersonalReport: React.FC<Props> = ({
       })}
 
       {/* 읽기 전용 모드 */}
-      {!canEdit && readonlyEntries.map((e) => {
+      {!canEdit && readonlyEntries.map((e, idx) => {
         const project = projects.find((p) => p.id === e.project_id);
+        // 프로젝트가 삭제됐으면 작성 시점 스냅샷명 사용
+        const name = project?.name ?? e.project_name ?? '';
         return (
-          <Paper key={e.project_id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
+          <Paper key={e.project_id ?? `snap-${idx}`} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
             <Box sx={{ bgcolor: '#0F172A', px: 2.5, py: 1.5 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white' }}>{project?.name ?? ''}</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white' }}>{name}</Typography>
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
               <Box sx={{ p: 2, borderRight: '1px solid', borderColor: 'divider' }}>
