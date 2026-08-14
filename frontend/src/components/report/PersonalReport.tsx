@@ -2,9 +2,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box, Typography, Button, CircularProgress,
   Paper, TextField, IconButton, Select, MenuItem, FormControl,
-  Snackbar, Alert,
+  Snackbar, Alert, Stack, Chip,
 } from '@mui/material';
-import { Add as AddIcon, Close as CloseIcon, Save as SaveIcon } from '@mui/icons-material';
+import { Add as AddIcon, Close as CloseIcon, Save as SaveIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { reportApi } from '../../api/reportApi';
 import { projectApi } from '../../api/projectApi';
 import type { Report, Project, EntryData } from '../../types';
@@ -141,62 +141,49 @@ const PersonalReport: React.FC<Props> = ({
   // 현재 슬롯에서 이미 선택된 project id 목록
   const takenIds = slots.map((s) => s.projectId).filter(Boolean) as number[];
 
+  const isDone = report?.status === 'done';
+  const hasSlot = slots.some((s) => s.projectId !== null);
+
   return (
     <Box>
       {/* 헤더 */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2.5, gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 1, flexWrap: 'wrap' }}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>{displayName}의 주간보고</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.3 }}>{todayLabel()}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>{displayName}의 주간보고</Typography>
+          <Typography variant="caption" color="text.secondary">{todayLabel()}</Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-          {canEdit && (
-            <IconButton
-              onClick={addSlot}
-              sx={{
-                bgcolor: 'primary.main', color: 'white', width: 36, height: 36,
-                '&:hover': { bgcolor: 'primary.dark' },
-              }}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
-          )}
-          {canEdit ? (
-            <Button
-              size="small"
-              variant={report?.status === 'done' ? 'contained' : 'outlined'}
-              color={report?.status === 'done' ? 'primary' : 'inherit'}
+        {canEdit ? (
+          <Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
+            <Button size="small" variant="outlined" color="inherit" startIcon={<AddIcon />} onClick={addSlot}
+              sx={{ borderColor: 'divider', color: 'text.secondary' }}>
+              프로젝트
+            </Button>
+            <Button size="small" variant={isDone ? 'contained' : 'outlined'}
+              color={isDone ? 'success' : 'inherit'} startIcon={<CheckCircleIcon fontSize="small" />}
               onClick={handleToggleDone}
-              sx={{
-                fontWeight: 600,
-                color: report?.status === 'done' ? 'white' : 'text.disabled',
-                borderColor: report?.status === 'done' ? undefined : '#CBD5E1',
-              }}
-            >
+              sx={{ borderColor: isDone ? undefined : 'divider', color: isDone ? 'white' : 'text.secondary' }}>
               작성완료
             </Button>
-          ) : (
-            <Box sx={{
-              px: 2, py: 0.5, borderRadius: 4,
-              bgcolor: report?.status === 'done' ? 'primary.main' : 'grey.300',
-              color: report?.status === 'done' ? 'white' : 'text.secondary',
-              fontSize: 13, fontWeight: 600,
-            }}>
-              {report?.status === 'done' ? '작성완료' : '미작성'}
-            </Box>
-          )}
-        </Box>
+            <Button size="small" variant="contained" startIcon={<SaveIcon fontSize="small" />}
+              onClick={handleSave} disabled={saving || !hasSlot}>
+              저장
+            </Button>
+          </Stack>
+        ) : (
+          <Chip size="small" color={isDone ? 'primary' : 'default'}
+            label={isDone ? '작성완료' : '미작성'} sx={{ fontWeight: 600 }} />
+        )}
       </Box>
 
       {/* 빈 상태 */}
       {canEdit && slots.length === 0 && (
-        <Box sx={{ textAlign: 'center', mt: 8, border: '2px dashed', borderColor: 'divider', borderRadius: 2, py: 6, color: 'text.secondary' }}>
-          <AddIcon sx={{ fontSize: 40, color: '#CBD5E1', mb: 1 }} />
-          <Typography>오른쪽 + 버튼으로 프로젝트를 추가하세요.</Typography>
+        <Box sx={{ textAlign: 'center', mt: 6, border: '1px dashed', borderColor: 'divider', borderRadius: 2, py: 5, color: 'text.secondary' }}>
+          <AddIcon sx={{ fontSize: 32, color: 'text.disabled', mb: 0.5 }} />
+          <Typography variant="body2">우측 상단 [프로젝트]로 항목을 추가하세요.</Typography>
         </Box>
       )}
       {!canEdit && readonlyEntries.length === 0 && (
-        <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 8 }}>아직 작성된 내용이 없습니다.</Typography>
+        <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 6 }}>아직 작성된 내용이 없습니다.</Typography>
       )}
 
       {/* 편집 모드: 슬롯 카드 */}
@@ -212,61 +199,51 @@ const PersonalReport: React.FC<Props> = ({
           });
 
         return (
-          <Paper key={slot.slotId} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
-            {/* 카드 헤더: 프로젝트 선택 */}
-            <Box sx={{ bgcolor: '#0F172A', px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-              <FormControl size="small" sx={{ flex: 1 }}>
+          <Paper key={slot.slotId} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 1.5, overflow: 'hidden' }}>
+            {/* 슬림 헤더: 프로젝트 선택 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.5, bgcolor: 'action.hover', borderBottom: slot.projectId ? '1px solid' : 'none', borderColor: 'divider' }}>
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: slot.projectId ? 'primary.main' : 'text.disabled', flexShrink: 0 }} />
+              <FormControl variant="standard" size="small" sx={{ flex: 1 }}>
                 <Select
+                  disableUnderline
                   value={slot.projectId ?? ''}
                   onChange={(e) => selectProject(slot.slotId, Number(e.target.value))}
-                  sx={{
-                    color: slot.projectId ? 'white' : 'rgba(255,255,255,0.5)',
-                    fontWeight: 600,
-                    '.MuiOutlinedInput-notchedOutline': { border: 'none' },
-                    '.MuiSvgIcon-root': { color: 'rgba(255,255,255,0.7)' },
-                    '& .MuiSelect-select': { py: 0.5, fontSize: 15 },
-                  }}
+                  displayEmpty
+                  sx={{ fontWeight: 600, fontSize: 14, '& .MuiSelect-select': { py: 0.25 } }}
                   MenuProps={{ PaperProps: { sx: { maxHeight: 260 } } }}
-                  renderValue={(val) => val ? projects.find((p) => p.id === val)?.name : '프로젝트를 선택하세요'}
+                  renderValue={(val) => val ? projects.find((p) => p.id === val)?.name
+                    : <Box component="span" sx={{ color: 'text.disabled', fontWeight: 400 }}>프로젝트 선택</Box>}
                 >
                   {available.map((p) => (
                     <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <IconButton size="small" onClick={() => removeSlot(slot.slotId)} sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: 'white' } }}>
-                <CloseIcon fontSize="small" />
+              <IconButton size="small" onClick={() => removeSlot(slot.slotId)} sx={{ color: 'text.disabled' }}>
+                <CloseIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Box>
 
-            {/* 프로젝트 선택 전: 안내 문구 */}
-            {!slot.projectId && (
-              <Box sx={{ px: 3, py: 3, color: 'text.disabled', textAlign: 'center', fontSize: 14 }}>
-                위에서 프로젝트를 선택하면 작성란이 표시됩니다.
-              </Box>
-            )}
-
-            {/* 프로젝트 선택 후: 금주/차주 입력 */}
             {slot.projectId && (
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-                <Box sx={{ p: 2, borderRight: '1px solid', borderColor: 'divider' }}>
+                <Box sx={{ p: 1.5, borderRight: '1px solid', borderColor: 'divider' }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{dateLabels.current}</Typography>
                   <TextField
-                    multiline minRows={4} fullWidth size="small"
+                    multiline minRows={3} fullWidth size="small"
                     value={entry?.current ?? ''}
                     onChange={(e) => updateEntry(slot.projectId!, 'current', e.target.value)}
-                    sx={{ mt: 1 }}
-                    placeholder="금주 업무 내용을 입력하세요"
+                    sx={{ mt: 0.75 }}
+                    placeholder="금주 업무"
                   />
                 </Box>
-                <Box sx={{ p: 2 }}>
+                <Box sx={{ p: 1.5 }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{dateLabels.next}</Typography>
                   <TextField
-                    multiline minRows={4} fullWidth size="small"
+                    multiline minRows={3} fullWidth size="small"
                     value={entry?.next ?? ''}
                     onChange={(e) => updateEntry(slot.projectId!, 'next', e.target.value)}
-                    sx={{ mt: 1 }}
-                    placeholder="차주 업무 내용을 입력하세요"
+                    sx={{ mt: 0.75 }}
+                    placeholder="차주 계획"
                   />
                 </Box>
               </Box>
@@ -278,35 +255,26 @@ const PersonalReport: React.FC<Props> = ({
       {/* 읽기 전용 모드 */}
       {!canEdit && readonlyEntries.map((e, idx) => {
         const project = projects.find((p) => p.id === e.project_id);
-        // 프로젝트가 삭제됐으면 작성 시점 스냅샷명 사용
         const name = project?.name ?? e.project_name ?? '';
         return (
-          <Paper key={e.project_id ?? `snap-${idx}`} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 2, overflow: 'hidden' }}>
-            <Box sx={{ bgcolor: '#0F172A', px: 2.5, py: 1.5 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'white' }}>{name}</Typography>
+          <Paper key={e.project_id ?? `snap-${idx}`} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, mb: 1.5, overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.75, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'primary.main', flexShrink: 0 }} />
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>{name}</Typography>
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-              <Box sx={{ p: 2, borderRight: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ p: 1.5, borderRight: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{dateLabels.current}</Typography>
-                <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{e.current_work || '-'}</Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{e.current_work || '-'}</Typography>
               </Box>
-              <Box sx={{ p: 2 }}>
+              <Box sx={{ p: 1.5 }}>
                 <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{dateLabels.next}</Typography>
-                <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>{e.next_work || '-'}</Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{e.next_work || '-'}</Typography>
               </Box>
             </Box>
           </Paper>
         );
       })}
-
-      {/* 저장 버튼 */}
-      {canEdit && slots.some((s) => s.projectId !== null) && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-          <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} disabled={saving} sx={{ px: 4 }}>
-            저장
-          </Button>
-        </Box>
-      )}
 
       <Snackbar
         open={saved}
