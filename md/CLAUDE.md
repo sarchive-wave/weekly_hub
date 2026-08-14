@@ -12,8 +12,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **프로젝트 대시보드**: 전체 프로젝트 현황(코드·유형·PM·팀원·상태)을 카드/리스트로 시각화, 개인별 순서·유형 필터
 - **프로젝트 상세**: 소개·유형·기간·NAS·Git·팀원 + 주간 진행(read-only) + 변경 이력(감사)
 - **주간보고**: 주차별 개인 업무 작성 + 전체 취합
-- **설정**: 프로젝트 관리 / 인력 관리 / 시스템(권한) 관리
+- **설정**(5탭): 프로젝트 관리 / 유형·상태 관리 / 인력 관리 / 시스템(권한) 관리 / 관리이력(감사 로그)
 - 로그인/권한(전역 관리자·일반 + 프로젝트별 PM·팀원) 기반, 다크모드 지원
+- 데이터 보존: 프로젝트/주차/사용자 삭제는 과거 주간보고를 보존(스냅샷·소프트 삭제), 주간보고 작성은 본인만
 
 > 리포지토리 리모트는 여전히 `weekly_hub.git` (로컬 디렉토리만 ai_weekly_hub).
 
@@ -27,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Backend | Python 3.9 + FastAPI + SQLAlchemy 2.0 + Pydantic v2 |
 | Auth | JWT(python-jose) + bcrypt(passlib) |
 | Database | PostgreSQL `weekly_hub_db`, 스키마 분리 `common` / `weekly` |
-| 통신 | REST API `/api/v1/`, 프론트가 백엔드(8081) 직접 호출(CORS) |
+| 통신 | REST API `/api/v1/`, 개발은 Vite proxy(`/api`→8081), baseURL은 `VITE_API_BASE` 환경변수 |
 
 ---
 
@@ -50,7 +51,7 @@ ai_weekly_hub/
 │   │   ├── auth/            # jwt, dependencies(get_current_user/require_admin)
 │   │   ├── models/          # user, project(+type/status/member/log), user_project_order, role_permission, week, report
 │   │   ├── schemas/ routers/ services/
-│   └── migrations/          # 001~004 SQL (수기 실행)
+│   └── migrations/          # 001~007 SQL (수기 실행)
 ├── md/                      # 문서 9종 (이 폴더)
 ├── design/                  # 설계 산출물(ERD/유스케이스 mmd)
 └── start.sh / stop.sh

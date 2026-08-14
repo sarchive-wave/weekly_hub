@@ -17,15 +17,17 @@
 ## Users `/api/v1/users` (관리자 전용)
 | Method | Endpoint | 설명 |
 |---|---|---|
-| GET | `` | 사용자 목록(직책순→가나다) |
-| POST | `` | 생성 `{username,password,display_name,role,position?,team?}` |
+| GET | `` | 사용자 목록(직책순→가나다, 비활성은 맨 아래) |
+| POST | `` | 생성 `{username,password,display_name,role,position?,team?,in_dashboard?,in_weekly?}` |
 | PUT | `/reorder` | 순서 재정렬 |
-| PUT | `/{id}` | 수정(**username 변경 가능**, display_name/role/is_active/position/team) |
-| DELETE | `/{id}` | 삭제 |
+| PUT | `/{id}` | 수정(**username 변경 가능**, display_name/role/is_active/position/team/in_dashboard/in_weekly) |
+| DELETE | `/{id}` | **소프트 삭제(비활성화)** → `is_active=false` |
+| POST | `/{id}/activate` | **활성화**(비활성→활성 복구) |
 | POST | `/{id}/reset-password` | 비밀번호 초기화 |
 
 - 아이디 중복 409, 비밀번호 6자 미만 400, **admin 계정 수정/삭제 403**(보호).
-- 퇴사자는 삭제 대신 `is_active=false` 권장(주간보고 기록 CASCADE 삭제 방지).
+- **퇴사자는 하드 삭제하지 않고 `is_active=false`로 비활성화**(가역적). 과거 주간보고 기록 보존, 멤버 목록엔 이름 뒤 `(비활성)`으로 맨 아래 노출.
+- 참여 플래그 `in_dashboard`/`in_weekly`는 **작성/선택 대상 여부만** 제어(메뉴 노출과 무관). `in_weekly=false`면 주간보고 작성 대상에서 제외, `in_dashboard=false`면 PM/팀원 선택 목록에서 제외.
 
 ## Projects `/api/v1/projects`
 | Method | Endpoint | 인증 | 설명 |
@@ -62,18 +64,22 @@
 | GET | `` | 로그인 | 주차 목록(+완료 인원수) |
 | POST | `` | 관리자 | 주차 생성(종료일<시작일 400) |
 | PUT | `/{id}` | 관리자 | 주차 수정(날짜 검증) |
-| DELETE | `/{id}` | 관리자 | 삭제(보고 CASCADE) |
-| GET | `/{id}/members` | 로그인 | 멤버 상태(직책순) |
+| DELETE | `/{id}` | 관리자 | **소프트 삭제**(`is_deleted=true`) — 화면에서만 숨김, 주차·보고 데이터 보존 |
+| GET | `/{id}/members` | 로그인 | 멤버 상태(직책순). **admin 제외**, 활성+주간참여 ∪ 이 주차 보고 남은 사용자(비활성 포함) |
 | GET | `/{id}/summary` | 로그인 | 전체 취합(주간보고 노출 프로젝트만) |
+
+- 주차 목록/생성/수정은 `is_deleted=false`만 대상. 참여 인원수(`total_members`)는 **활성 + 주간참여 + 비-admin**만 집계.
 
 ## Reports `/api/v1/reports`
 | Method | Endpoint | 인증 | 설명 |
 |---|---|---|---|
-| GET | `/{week_id}/{user_id}` | 본인·관리자 | 보고 조회 |
-| PUT | `/{week_id}/{user_id}` | 본인·관리자 | 저장(entries 전체 교체) |
-| PATCH | `/{week_id}/{user_id}/status` | 본인·관리자 | 상태 변경 |
+| GET | `/{week_id}/{user_id}` | **읽기=본인·관리자** | 보고 조회 |
+| PUT | `/{week_id}/{user_id}` | **쓰기=본인만** | 저장(entries 전체 교체) |
+| PATCH | `/{week_id}/{user_id}/status` | **쓰기=본인만** | 상태 변경 |
 
+- **쓰기는 본인만**: 관리자도 타인 보고는 read-only(403 "본인의 주간보고만 작성/수정할 수 있습니다."). 관리자는 애초에 멤버 목록에 없어 작성 대상이 아님.
 - 작성 드롭다운의 프로젝트는 **진행중 + 주간보고 노출**만(`visible=weekly`).
+- 저장 시 `report_entries.project_name` 스냅샷 기록 → 프로젝트가 삭제돼도 과거 보고에 프로젝트명 보존(조회 시 현재명 우선, 없으면 스냅샷명).
 
 ## Permissions `/api/v1/permissions` (관리자 전용)
 | Method | Endpoint | 설명 |

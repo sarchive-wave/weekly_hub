@@ -30,7 +30,7 @@ common.users ─┬─< common.project_members >─┬─ common.projects ─┬
               └─< weekly.reports >── weekly.weeks               │
                      └─< weekly.report_entries >────────────────┘
 ```
-- 모든 하위 관계 ON DELETE CASCADE. 프로젝트 삭제 → members/logs/order/report_entries 정리.
+- 하위 관계 대부분 ON DELETE CASCADE(members/logs/order). **예외: `report_entries.project_id`는 ON DELETE SET NULL** — 프로젝트를 삭제해도 과거 보고 엔트리는 `project_name` 스냅샷과 함께 보존.
 
 ---
 
@@ -46,8 +46,10 @@ common.users ─┬─< common.project_members >─┬─ common.projects ─┬
 | display_name | varchar(50) | 표시 이름 |
 | position | varchar(50) | 직책(센터장/팀장/차장/과장/대리) |
 | team | varchar(50) | 소속/팀 |
-| is_active | bool | 비활성 시 로그인·집계 제외(퇴사자 처리) |
-| sort_order | int | (표시는 직책순→가나다 규칙 우선, `function.md`) |
+| is_active | bool | 비활성 시 로그인·집계 제외(퇴사자 소프트 삭제). 활성화로 복구 |
+| in_dashboard | bool | 대시보드 참여(PM/팀원 선택 대상 여부) |
+| in_weekly | bool | 주간보고 참여(작성 멤버 대상 여부). false여도 메뉴 노출은 유지 |
+| sort_order | int | (표시는 활성우선→직책순→가나다 규칙 우선, `function.md`) |
 | created_at / updated_at | timestamp | |
 
 ## common.projects
@@ -94,9 +96,9 @@ common.users ─┬─< common.project_members >─┬─ common.projects ─┬
 
 ## weekly.weeks / reports / report_entries
 
-- **weeks**: `id, year, month, week_num, title, start_date, end_date, created_at`, UNIQUE(year,month,week_num)
+- **weeks**: `id, year, month, week_num, title, start_date, end_date, is_deleted bool, created_at`. **부분 유니크** `weeks_ymw_active_uniq (year,month,week_num) WHERE is_deleted=false`(활성 주차만 중복 방지, 소프트 삭제분은 재사용 가능)
 - **reports**: `id, week_id FK, user_id FK(common.users), status(none/draft/done), updated_at`, UNIQUE(week_id,user_id)
-- **report_entries**: `id, report_id FK, project_id FK(common.projects), current_work text, next_work text`, UNIQUE(report_id,project_id)
+- **report_entries**: `id, report_id FK, project_id FK(common.projects) NULLABLE ON DELETE SET NULL, project_name varchar(100) 스냅샷, current_work text, next_work text`, UNIQUE(report_id,project_id)
 
 > 저장 시 해당 report의 기존 엔트리를 전부 삭제 후 재삽입(전체 교체). `function.md` 참조.
 
