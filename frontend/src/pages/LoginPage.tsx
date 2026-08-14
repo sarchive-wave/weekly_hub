@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
-                label="아이디"
+                placeholder="아이디"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 size="small"
@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
                 autoFocus
               />
               <TextField
-                label="비밀번호"
+                placeholder="비밀번호"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
